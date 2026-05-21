@@ -26,7 +26,8 @@ jobs:
 
       - name: Deploy to EdgeOne Pages
         run: |
-          npm install -g @edgeone/cli
+          npm install -g edgeone
           edgeone pages deploy dist/ \
             --token ${{ secrets.EDGEONE_PAGES_TOKEN }} \
+            --name shenshu-exhibition \
             --env production
