@@ -1,0 +1,189 @@
+/* ============================================================
+   V1.3 特效系统 — 玻璃拟态 + 发光 + 动效
+   ============================================================ */
+
+/* === 玻璃拟态面板（V1.3 升级版） === */
+.glass-panel {
+  background: var(--bg-panel);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid var(--border-light);
+  box-shadow:
+    var(--shadow-md),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 0 20px rgba(74, 184, 255, 0.06);
+}
+
+.glass-panel-strong {
+  background: var(--bg-panel-strong);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid var(--border-medium);
+  box-shadow:
+    var(--shadow-lg),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 30px rgba(74, 184, 255, 0.08);
+}
+
+.glass-panel-weak {
+  background: var(--bg-panel-weak);
+  backdrop-filter: blur(12px) saturate(120%);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
+  border: 1px solid rgba(126, 190, 255, 0.10);
+}
+
+/* === 发光效果 === */
+.glow-blue {
+  box-shadow: var(--shadow-glow-blue);
+}
+.glow-purple {
+  box-shadow: var(--shadow-glow-purple);
+}
+.glow-gold {
+  box-shadow: 0 0 24px var(--glow-gold), 0 0 60px rgba(246, 201, 107, 0.12);
+}
+.glow-cyan {
+  box-shadow: 0 0 24px var(--glow-cyan), 0 0 60px rgba(49, 244, 255, 0.12);
+}
+
+/* === 文本发光 === */
+.text-glow-blue {
+  text-shadow: 0 0 16px var(--glow-blue), 0 0 40px rgba(74, 184, 255, 0.20);
+}
+.text-glow-purple {
+  text-shadow: 0 0 16px var(--glow-purple), 0 0 40px rgba(138, 111, 255, 0.20);
+}
+.text-glow-gold {
+  text-shadow: 0 0 16px var(--glow-gold), 0 0 40px rgba(246, 201, 107, 0.20);
+}
+.text-glow-cyan {
+  text-shadow: 0 0 16px var(--glow-cyan), 0 0 40px rgba(49, 244, 255, 0.20);
+}
+
+/* === 渐变边框 === */
+.border-gradient {
+  position: relative;
+}
+.border-gradient::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, var(--core-blue), var(--glow-purple));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* === 呼吸光晕 === */
+@keyframes breathe {
+  0%, 100% { opacity: 0.55; box-shadow: 0 0 12px rgba(74, 184, 255, 0.20); }
+  50% { opacity: 1; box-shadow: 0 0 24px rgba(74, 184, 255, 0.45), 0 0 60px rgba(74, 184, 255, 0.12); }
+}
+.breathe {
+  animation: breathe 3s ease-in-out infinite;
+}
+
+@keyframes breathe-gold {
+  0%, 100% { opacity: 0.5; box-shadow: 0 0 10px rgba(246, 201, 107, 0.15); }
+  50% { opacity: 1; box-shadow: 0 0 22px rgba(246, 201, 107, 0.40), 0 0 50px rgba(246, 201, 107, 0.10); }
+}
+.breathe-gold {
+  animation: breathe-gold 3.5s ease-in-out infinite;
+}
+
+/* === 浮动 === */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.float {
+  animation: float 5s ease-in-out infinite;
+}
+
+/* === 数据流光 === */
+@keyframes data-flow {
+  0% { stroke-dashoffset: 24; }
+  100% { stroke-dashoffset: 0; }
+}
+.data-flow {
+  stroke-dasharray: 6 6;
+  animation: data-flow 1.2s ease-in-out infinite;
+}
+
+/* === 扫描线覆盖 === */
+.scanlines::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0, 0, 0, 0.055) 3px,
+    rgba(0, 0, 0, 0.055) 6px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* === 网格地面 === */
+.grid-floor {
+  background-image:
+    linear-gradient(rgba(74, 184, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(74, 184, 255, 0.04) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* === 角落装饰（展厅框架感） === */
+.corner-frame::before,
+.corner-frame::after {
+  content: "";
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-color: rgba(74, 184, 255, 0.25);
+  pointer-events: none;
+}
+.corner-frame::before {
+  top: 0; left: 0;
+  border-top: 1px solid; border-left: 1px solid;
+}
+.corner-frame::after {
+  bottom: 0; right: 0;
+  border-bottom: 1px solid; border-right: 1px solid;
+}
+
+/* === 粒子渐入 === */
+@keyframes particle-in {
+  0% { opacity: 0; transform: scale(0.4); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* === 脉冲扩散 === */
+@keyframes pulse-ring {
+  0% { transform: scale(0.8); opacity: 0.6; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+.pulse-ring {
+  animation: pulse-ring 2s ease-out infinite;
+}
+
+/* === 按钮交互波纹 === */
+.btn-ripple {
+  position: relative;
+  overflow: hidden;
+}
+.btn-ripple::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at var(--rx, 50%) var(--ry, 50%), rgba(74,184,255,0.15) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.btn-ripple:hover::after {
+  opacity: 1;
+}
