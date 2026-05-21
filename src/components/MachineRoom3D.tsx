@@ -542,10 +542,10 @@ function HardwareInfoPanel() {
         </div>
         <p className="text-sm text-text-secondary leading-relaxed">{hw.description}</p>
         <div className="mt-auto pt-4">
-          <div className="text-[10px] text-text-muted">状态</div>
+          <div className="text-sm" style={{ color: 'var(--text-muted)' }}>状态</div>
           <div className="flex items-center gap-2 mt-1">
             <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-            <span className="text-xs text-text-secondary">正常运行</span>
+            <span className="text-sm" style={{ color: 'var(--text-sub)' }}>正常运行</span>
           </div>
         </div>
       </div>
@@ -589,7 +589,7 @@ export default function MachineRoom3D() {
         <h2 className="text-2xl font-bold text-glow-blue tracking-wider mb-1">
           三维机房展厅
         </h2>
-        <p className="text-xs text-text-muted">
+        <p className="text-sm text-text-muted">
           算力基础设施核心硬件体系
         </p>
       </div>
@@ -598,12 +598,12 @@ export default function MachineRoom3D() {
       <div className="absolute left-8 top-24 bottom-24 z-30 flex flex-col justify-center">
         <div className="rounded-xl p-4 w-64 space-y-2"
           style={{
-            background: 'rgba(7, 16, 28, 0.85)',
-            backdropFilter: 'blur(16px)',
-            border: '1px solid rgba(126, 190, 255, 0.12)',
+            background: 'rgba(11, 20, 36, 0.6)',
+            backdropFilter: 'blur(16px) saturate(140%)',
+            border: '1px solid rgba(126, 190, 255, 0.1)',
           }}
         >
-          <div className="text-xs tracking-wider mb-2 flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
+          <div className="text-sm tracking-wider mb-2 flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
             <span className="w-1 h-1 rounded-full" style={{ background: 'var(--cyan-flow)' }} />
             机房设备
           </div>
@@ -620,6 +620,18 @@ export default function MachineRoom3D() {
                   background: isActive ? 'rgba(74, 184, 255, 0.08)' : 'transparent',
                   border: isActive ? '1px solid rgba(74, 184, 255, 0.25)' : '1px solid transparent',
                 }}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.03)'
+                    e.currentTarget.style.border = '1px solid rgba(126, 190, 255, 0.1)'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = 'transparent'
+                    e.currentTarget.style.border = '1px solid transparent'
+                  }
+                }}
               >
                 <div className="flex items-center gap-3">
                   {Icon && (
@@ -634,12 +646,12 @@ export default function MachineRoom3D() {
                   )}
                   <div className="flex-1 min-w-0">
                     <div
-                      className="text-xs font-medium truncate"
+                      className="text-sm font-medium truncate"
                       style={{ color: isActive ? 'var(--blue-core)' : 'var(--text-main)' }}
                     >
                       {hw.name}
                     </div>
-                    <div className="text-[10px] truncate mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                    <div className="text-sm truncate mt-0.5" style={{ color: 'var(--text-muted)' }}>
                       {hw.description.slice(0, 20)}...
                     </div>
                   </div>
@@ -683,29 +695,29 @@ export default function MachineRoom3D() {
               </div>
               <div className="space-y-3 flex-1">
                 <div className="p-3 rounded-lg bg-white/5 border border-border-light">
-                  <div className="text-[10px] text-text-muted mb-1">节点名称</div>
-                  <div className="text-xs text-text-main">杭州算力节点</div>
+                  <div className="text-sm text-text-muted mb-1">节点名称</div>
+                  <div className="text-sm text-text-main">杭州算力节点</div>
                 </div>
                 <div className="p-3 rounded-lg bg-white/5 border border-border-light">
-                  <div className="text-[10px] text-text-muted mb-1">机房类型</div>
-                  <div className="text-xs text-text-main">高标准数据机房</div>
+                  <div className="text-sm text-text-muted mb-1">机房类型</div>
+                  <div className="text-sm text-text-main">高标准数据机房</div>
                 </div>
                 <div className="p-3 rounded-lg bg-white/5 border border-border-light">
-                  <div className="text-[10px] text-text-muted mb-1">资源能力</div>
-                  <div className="text-xs text-text-sub">GPU服务器 / 网络交换 / 存储阵列 / 运维监控</div>
+                  <div className="text-sm text-text-muted mb-1">资源能力</div>
+                  <div className="text-sm text-text-sub">GPU服务器 / 网络交换 / 存储阵列 / 运维监控</div>
                 </div>
                 <div className="p-3 rounded-lg bg-white/5 border border-border-light">
-                  <div className="text-[10px] text-text-muted mb-1">资料类型</div>
+                  <div className="text-sm text-text-muted mb-1">资料类型</div>
                   <div className="flex flex-wrap gap-1 mt-1">
                     {['实景图', '设备图', '运维说明', '合作说明'].map((t) => (
-                      <span key={t} className="px-2 py-0.5 rounded text-[9px] bg-primary-blue/10 text-primary-blue border border-primary-blue/20">
+                      <span key={t} className="px-2 py-0.5 rounded text-sm bg-primary-blue/10 text-primary-blue border border-primary-blue/20">
                         {t}
                       </span>
                     ))}
                   </div>
                 </div>
               </div>
-              <div className="mt-auto pt-3 text-[10px] text-text-muted text-center">
+              <div className="mt-auto pt-3 text-sm text-text-muted text-center">
                 资料占位，后续可接入真实文件
               </div>
             </div>
@@ -717,19 +729,19 @@ export default function MachineRoom3D() {
       <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-30 flex gap-4">
         <button
           onClick={() => setSection('map')}
-          className="glass-panel px-5 py-2 rounded-lg text-xs text-text-secondary border border-border-light hover:text-text-main transition-all"
+          className="glass-panel px-5 py-2 rounded-lg text-sm text-text-secondary border border-border-light hover:text-text-main transition-all"
         >
           返回全国地图
         </button>
         <button
           onClick={() => setShowMachineDocs(true)}
-          className="glass-panel px-5 py-2 rounded-lg text-xs text-accent-gold border border-accent-gold/30 hover:border-accent-gold/60 transition-all"
+          className="glass-panel px-5 py-2 rounded-lg text-sm text-accent-gold border border-accent-gold/30 hover:border-accent-gold/60 transition-all"
         >
           查看真实资料
         </button>
         <button
           onClick={() => setSection('consumption')}
-          className="glass-panel px-5 py-2 rounded-lg text-xs text-primary-cyan border border-primary-cyan/30 hover:border-primary-cyan/60 transition-all"
+          className="glass-panel px-5 py-2 rounded-lg text-sm text-primary-cyan border border-primary-cyan/30 hover:border-primary-cyan/60 transition-all"
         >
           消费权益演示
         </button>

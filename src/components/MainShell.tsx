@@ -73,6 +73,7 @@ export default function MainShell({ children }: { children: ReactNode }) {
             className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-3"
             style={{
               background: 'linear-gradient(180deg, rgba(3,5,10,0.92) 0%, rgba(3,5,10,0.4) 60%, transparent 100%)',
+              borderBottom: '1px solid rgba(126, 190, 255, 0.06)',
             }}
           >
             {/* Brand */}
@@ -91,7 +92,7 @@ export default function MainShell({ children }: { children: ReactNode }) {
                 <div className="text-sm font-bold tracking-wider" style={{ color: 'var(--text-main)' }}>
                   神枢算力权益通
                 </div>
-                <div className="text-[10px] tracking-widest" style={{ color: 'var(--text-muted)' }}>
+                <div className="text-xs tracking-widest" style={{ color: 'var(--text-muted)' }}>
                   全国算力生态数字展厅
                 </div>
               </div>
@@ -124,7 +125,7 @@ export default function MainShell({ children }: { children: ReactNode }) {
                                 background: 'rgba(74, 184, 255, 0.12)',
                                 color: 'var(--blue-core)',
                                 border: '1px solid rgba(74, 184, 255, 0.3)',
-                                boxShadow: '0 0 12px rgba(74,184,255,0.1)',
+                                boxShadow: '0 0 16px rgba(74,184,255,0.15), inset 0 1px 0 rgba(255,255,255,0.08)',
                               }
                             : {
                                 color: 'var(--text-muted)',
@@ -137,7 +138,7 @@ export default function MainShell({ children }: { children: ReactNode }) {
                     ))}
                   </div>
                   {gi < NAV_GROUPS.length - 1 && (
-                    <span className="mx-1.5 text-[10px]" style={{ color: 'rgba(111, 127, 159, 0.15)' }}>|</span>
+                    <span className="mx-1.5 text-xs" style={{ color: 'rgba(111, 127, 159, 0.15)' }}>|</span>
                   )}
                 </div>
               ))}
@@ -148,13 +149,16 @@ export default function MainShell({ children }: { children: ReactNode }) {
               {/* 路演参数舱入口 */}
               <button
                 onClick={() => setShowRoadshowDeck(true)}
-                className="px-4 py-2 rounded-lg text-xs border transition-all hover:text-accent-gold hover:border-accent-gold/25"
+                className="px-4 py-2 rounded-lg text-sm border transition-all hover:text-accent-gold hover:border-accent-gold/30 flex items-center gap-2"
                 style={{
                   background: 'rgba(15, 25, 48, 0.5)',
                   color: 'var(--text-muted)',
                   borderColor: 'var(--border-light)',
                 }}
               >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                </svg>
                 路演参数舱
               </button>
 
@@ -162,7 +166,7 @@ export default function MainShell({ children }: { children: ReactNode }) {
               {isPresentationMode && (
                 <button
                   onClick={() => setPresentationMode(false)}
-                  className="px-4 py-2 rounded-lg text-xs border transition-all"
+                  className="px-4 py-2 rounded-lg text-sm border transition-all"
                   style={{
                     background: 'rgba(246, 201, 107, 0.12)',
                     color: 'var(--gold-core)',
@@ -188,17 +192,17 @@ export default function MainShell({ children }: { children: ReactNode }) {
             borderColor: 'rgba(126, 190, 255, 0.08)',
           }}
         >
-          <div className="flex items-center gap-6 text-[10px]" style={{ color: 'var(--text-muted)' }}>
+          <div className="flex items-center gap-6 text-xs" style={{ color: 'var(--text-muted)' }}>
             <span className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full animate-pulse"
-                style={{ background: 'var(--cyan-flow)' }}
+                style={{ background: 'var(--cyan-flow)', boxShadow: '0 0 6px var(--cyan-flow)' }}
               />
-              展厅运行中
+              <span style={{ color: 'var(--cyan-flow)' }}>展厅运行中</span>
             </span>
             <span>神枢全国算力生态数字展厅 V2.0</span>
-            <span>路演推演模式</span>
+            <span style={{ color: 'var(--gold-core)' }}>路演推演模式</span>
           </div>
-          <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
             {new Date().toLocaleDateString('zh-CN')} | 神枢算力权益通
           </div>
         </div>

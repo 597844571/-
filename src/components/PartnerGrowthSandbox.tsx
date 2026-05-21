@@ -3,8 +3,10 @@ import { motion } from 'framer-motion'
 import { useExhibitionStore } from '../store/exhibitionStore'
 import { IDENTITY_LABELS } from '../data/roadshowPreset'
 import { loadEffectiveScenario } from '../utils/scenarioStorage'
+import { getScenarioByIdentity } from '../data/identityScenarios'
 import { calculateGrowth } from '../utils/growthCalculation'
 import type { GrowthResult } from '../utils/growthCalculation'
+import type { PartnerIdentity } from '../data/roadshowPreset'
 
 /* ============================================================
    V2.0 合伙权益增长沙盘
@@ -52,11 +54,11 @@ function RevenueBadge({
         border: '1px solid rgba(126, 190, 255, 0.1)',
       }}
     >
-      <div className="text-[10px] mb-1" style={{ color: 'var(--text-muted)' }}>
+      <div className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>
         {title}
       </div>
       <MetricValue value={value} prefix={prefix} suffix={suffix} />
-      <div className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>
+      <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
         {source}
       </div>
     </motion.div>
@@ -168,7 +170,7 @@ function PersonalEquityCore({ result }: { result: GrowthResult }) {
             }}
           >
             <div
-              className="absolute text-[9px] whitespace-nowrap"
+              className="absolute text-xs whitespace-nowrap"
               style={{
                 color: ring.color,
                 top: i % 2 === 0 ? '-12px' : undefined,
@@ -189,7 +191,7 @@ function PersonalEquityCore({ result }: { result: GrowthResult }) {
           boxShadow: '0 0 20px rgba(74,184,255,0.15)',
         }}
       >
-        <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>投入</span>
+        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>投入</span>
         <span className="text-sm font-bold" style={{ color: 'var(--gold-core)' }}>
           ¥{result.personalInvestment.toLocaleString()}
         </span>
@@ -250,7 +252,7 @@ function TeamGrowthConstellation({ scenario }: { scenario: { invitedCustomers: n
 }
 
 export default function PartnerGrowthSandbox() {
-  const { currentScenario, setShowRoadshowDeck } = useExhibitionStore()
+  const { currentScenario, setCurrentScenario, setShowRoadshowDeck } = useExhibitionStore()
 
   // 优先使用 currentScenario（实时推演），否则加载默认方案
   const scenario = currentScenario ?? loadEffectiveScenario()
@@ -258,32 +260,41 @@ export default function PartnerGrowthSandbox() {
 
   const identityLabel = IDENTITY_LABELS[scenario.identity] ?? '普通会员'
 
+  // 点击身份阶梯切换默认方案
+  const handleIdentityClick = (identity: PartnerIdentity) => {
+    const newScenario = getScenarioByIdentity(identity)
+    setCurrentScenario(newScenario)
+  }
+
   return (
     <div className="relative w-full h-full overflow-hidden flex flex-col p-6 pt-20">
       {/* 顶部标题 */}
       <div className="flex items-center justify-between mb-4 flex-shrink-0">
         <div>
-          <h2 className="text-lg font-bold" style={{ color: 'var(--text-main)' }}>
+          <h2 className="text-xl font-bold" style={{ color: 'var(--text-main)' }}>
             合伙权益增长沙盘
           </h2>
-          <div className="flex items-center gap-3 mt-1">
-            <span className="text-xs" style={{ color: 'var(--text-sub)' }}>
-              当前身份：<span style={{ color: 'var(--blue-core)' }}>{identityLabel}</span>
+          <div className="flex items-center gap-4 mt-1.5">
+            <span className="text-sm" style={{ color: 'var(--text-sub)' }}>
+              当前身份：<span className="font-medium" style={{ color: 'var(--blue-core)' }}>{identityLabel}</span>
             </span>
-            <span className="text-xs" style={{ color: 'var(--text-sub)' }}>
-              方案：<span style={{ color: 'var(--gold-core)' }}>{scenario.name}</span>
+            <span className="text-sm" style={{ color: 'var(--text-sub)' }}>
+              方案：<span className="font-medium" style={{ color: 'var(--gold-core)' }}>{scenario.name}</span>
             </span>
           </div>
         </div>
         <button
           onClick={() => setShowRoadshowDeck(true)}
-          className="px-4 py-2 rounded-lg text-xs transition-all hover:brightness-110"
+          className="px-4 py-2 rounded-lg text-sm font-medium transition-all hover:brightness-110 flex items-center gap-2"
           style={{
             background: 'linear-gradient(135deg, rgba(74,184,255,0.12), rgba(124,92,255,0.12))',
             color: 'var(--blue-core)',
             border: '1px solid rgba(74, 184, 255, 0.3)',
           }}
         >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
           调整推演参数
         </button>
       </div>
@@ -291,35 +302,49 @@ export default function PartnerGrowthSandbox() {
       {/* 主内容区 — 三栏布局 */}
       <div className="flex-1 grid grid-cols-12 gap-4 min-h-0">
         {/* 左侧：身份阶梯 */}
-        <div className="col-span-3 flex flex-col gap-3 overflow-y-auto pr-2" style={{ maxHeight: 'calc(100vh - 280px)' }}>
-          <h3 className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+        <div className="col-span-3 flex flex-col gap-3 overflow-y-auto pr-2 scrollbar-thin" style={{ maxHeight: 'calc(100vh - 280px)' }}>
+          <h3 className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
             身份阶梯
           </h3>
           {Object.entries(IDENTITY_LABELS).map(([key, label], i) => {
             const isActive = scenario.identity === key
             return (
-              <div
+              <button
                 key={key}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all"
+                onClick={() => handleIdentityClick(key as PartnerIdentity)}
+                className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-all text-left w-full group"
                 style={{
                   background: isActive ? 'rgba(74, 184, 255, 0.08)' : 'transparent',
-                  border: isActive ? '1px solid rgba(74, 184, 255, 0.2)' : '1px solid transparent',
+                  border: isActive ? '1px solid rgba(74, 184, 255, 0.25)' : '1px solid transparent',
+                  cursor: 'pointer',
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.03)'
+                    e.currentTarget.style.border = '1px solid rgba(126, 190, 255, 0.1)'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = 'transparent'
+                    e.currentTarget.style.border = '1px solid transparent'
+                  }
                 }}
               >
                 <div
-                  className="w-2 h-2 rounded-full flex-shrink-0"
+                  className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                   style={{
                     background: isActive ? COLORS[i % COLORS.length] : 'rgba(111, 127, 159, 0.3)',
                     boxShadow: isActive ? `0 0 6px ${COLORS[i % COLORS.length]}` : 'none',
                   }}
                 />
                 <span
-                  className="text-xs"
+                  className="text-sm"
                   style={{ color: isActive ? 'var(--text-main)' : 'var(--text-muted)' }}
                 >
                   {label}
                 </span>
-              </div>
+              </button>
             )
           })}
         </div>
@@ -334,7 +359,7 @@ export default function PartnerGrowthSandbox() {
               border: '1px solid rgba(126, 190, 255, 0.08)',
             }}
           >
-            <h3 className="text-xs font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
+            <h3 className="text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
               个人权益核心
             </h3>
             <div className="flex-1 flex items-center justify-center">
@@ -351,7 +376,7 @@ export default function PartnerGrowthSandbox() {
                 border: '1px solid rgba(126, 190, 255, 0.08)',
               }}
             >
-              <h3 className="text-xs font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
+              <h3 className="text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
                 团队增长星图
               </h3>
               <TeamGrowthConstellation scenario={scenario} />
@@ -363,29 +388,47 @@ export default function PartnerGrowthSandbox() {
                 border: '1px solid rgba(126, 190, 255, 0.08)',
               }}
             >
-              <h3 className="text-xs font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
+              <h3 className="text-sm font-medium mb-2" style={{ color: 'var(--text-muted)' }}>
                 增长池核心
               </h3>
               <div className="relative w-24 h-24 flex items-center justify-center">
+                {/* 外层脉冲光环 */}
                 <div
-                  className="absolute inset-0 rounded-full animate-ping"
+                  className="absolute inset-0 rounded-full"
                   style={{
-                    background: 'radial-gradient(circle, rgba(124,92,255,0.12) 0%, transparent 70%)',
-                    animationDuration: '3s',
+                    background: 'radial-gradient(circle, rgba(124,92,255,0.15) 0%, transparent 65%)',
+                    animation: 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                  }}
+                />
+                {/* 中层旋转光环 */}
+                <div
+                  className="absolute w-20 h-20 rounded-full"
+                  style={{
+                    border: '1px solid rgba(74, 184, 255, 0.15)',
+                    animation: 'spin 8s linear infinite',
                   }}
                 />
                 <div
-                  className="w-14 h-14 rounded-full flex items-center justify-center"
+                  className="absolute w-20 h-20 rounded-full"
                   style={{
-                    background: 'linear-gradient(135deg, rgba(74,184,255,0.15), rgba(124,92,255,0.15))',
-                    border: '1px solid rgba(74, 184, 255, 0.25)',
+                    border: '1px dashed rgba(124, 92, 255, 0.2)',
+                    animation: 'spin 12s linear infinite reverse',
+                  }}
+                />
+                {/* 核心 */}
+                <div
+                  className="w-14 h-14 rounded-full flex items-center justify-center relative z-10"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(74,184,255,0.2), rgba(124,92,255,0.2))',
+                    border: '1px solid rgba(74, 184, 255, 0.35)',
+                    boxShadow: '0 0 20px rgba(74,184,255,0.15), inset 0 1px 0 rgba(255,255,255,0.08)',
                   }}
                 >
-                  <span className="text-[9px]" style={{ color: 'var(--blue-core)' }}>增长池</span>
+                  <span className="text-xs font-medium" style={{ color: 'var(--blue-core)' }}>增长池</span>
                 </div>
               </div>
               <div className="text-center mt-2">
-                <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>累计注入</div>
+                <div className="text-xs" style={{ color: 'var(--text-muted)' }}>累计注入</div>
                 <div className="text-sm font-bold" style={{ color: 'var(--gold-core)' }}>
                   ¥{result.monthlyTrack.reduce((s, m) => s + m.poolInjection, 0).toLocaleString()}
                 </div>
@@ -395,26 +438,26 @@ export default function PartnerGrowthSandbox() {
         </div>
 
         {/* 右侧：收益铭牌 */}
-        <div className="col-span-4 flex flex-col gap-3 overflow-y-auto pr-1" style={{ maxHeight: 'calc(100vh - 280px)' }}>
-          <h3 className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+        <div className="col-span-4 flex flex-col gap-3 overflow-y-auto pr-1 scrollbar-thin" style={{ maxHeight: 'calc(100vh - 280px)' }}>
+          <h3 className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
             收益铭牌
           </h3>
 
-          <div className="text-[10px] font-medium" style={{ color: 'var(--text-sub)' }}>
+          <div className="text-xs font-medium" style={{ color: 'var(--text-sub)' }}>
             我的基础权益
           </div>
           <RevenueBadge title="产品礼包" value={result.productGiftValue} prefix="¥" source="投入金额 × 30% × 身份系数" delay={0} />
           <RevenueBadge title="数据资产奖励" value={result.dataAssetReward} prefix="¥" source="投入金额 × 50% × 身份系数" delay={0.05} />
           <RevenueBadge title="可流通资产" value={result.tradableAsset} prefix="¥" source="数据资产的 40%" delay={0.1} />
 
-          <div className="text-[10px] font-medium mt-1" style={{ color: 'var(--text-sub)' }}>
+          <div className="text-xs font-medium mt-1" style={{ color: 'var(--text-sub)' }}>
             我的增长权益（{scenario.projectionMonths}个月累计）
           </div>
           <RevenueBadge title="推荐奖励" value={result.referralReward} prefix="¥" source="团队投入 × 5% × 身份系数" delay={0.15} />
           <RevenueBadge title="团队补贴" value={result.teamSubsidy} prefix="¥" source="团队投入 × 3% × 身份系数" delay={0.2} />
           <RevenueBadge title="阶梯业绩奖励" value={result.tierBonus} prefix="¥" source="团队投入 × 2% × 时间系数" delay={0.25} />
 
-          <div className="text-[10px] font-medium mt-1" style={{ color: 'var(--text-sub)' }}>
+          <div className="text-xs font-medium mt-1" style={{ color: 'var(--text-sub)' }}>
             我的分成权益（月度）
           </div>
           <RevenueBadge title="全网销售额分成" value={result.globalSalesShare} prefix="¥" source="权益份额 × 20%" delay={0.3} />
@@ -438,7 +481,7 @@ export default function PartnerGrowthSandbox() {
               </span>
             </div>
             <div className="flex justify-between items-center mt-1">
-              <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
                 投资回报率
               </span>
               <span className="text-sm font-bold" style={{ color: 'var(--cyan-flow)' }}>
@@ -458,10 +501,10 @@ export default function PartnerGrowthSandbox() {
         }}
       >
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+          <h3 className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
             增长轨道
           </h3>
-          <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
             权益分成逐月走势
           </span>
         </div>

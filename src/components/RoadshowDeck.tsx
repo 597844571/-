@@ -92,7 +92,7 @@ export default function RoadshowDeck({ open, onClose }: Props) {
                 <h2 className="text-lg font-bold" style={{ color: 'var(--text-main)' }}>
                   路演推演参数
                 </h2>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
                   调整当前增长场景，保存后将刷新展示结果
                 </p>
               </div>
@@ -114,7 +114,7 @@ export default function RoadshowDeck({ open, onClose }: Props) {
                     <button
                       key={opt.value}
                       onClick={() => update('identity', opt.value)}
-                      className="px-3 py-2 rounded-lg text-xs transition-all text-left"
+                      className="px-3 py-2 rounded-lg text-sm transition-all text-left"
                       style={
                         scenario.identity === opt.value
                           ? {
@@ -150,7 +150,7 @@ export default function RoadshowDeck({ open, onClose }: Props) {
               <FieldGroup title="客户邀请">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[10px] block mb-1" style={{ color: 'var(--text-muted)' }}>
+                    <label className="text-sm block mb-1" style={{ color: 'var(--text-muted)' }}>
                       已邀请客户数
                     </label>
                     <NumberInput
@@ -161,7 +161,7 @@ export default function RoadshowDeck({ open, onClose }: Props) {
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] block mb-1" style={{ color: 'var(--text-muted)' }}>
+                    <label className="text-sm block mb-1" style={{ color: 'var(--text-muted)' }}>
                       转化率 (%)
                     </label>
                     <NumberInput
@@ -180,7 +180,7 @@ export default function RoadshowDeck({ open, onClose }: Props) {
               <FieldGroup title="客户投入">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[10px] block mb-1" style={{ color: 'var(--text-muted)' }}>
+                    <label className="text-sm block mb-1" style={{ color: 'var(--text-muted)' }}>
                       客户平均投入
                     </label>
                     <NumberInput
@@ -192,7 +192,7 @@ export default function RoadshowDeck({ open, onClose }: Props) {
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] block mb-1" style={{ color: 'var(--text-muted)' }}>
+                    <label className="text-sm block mb-1" style={{ color: 'var(--text-muted)' }}>
                       月均新增客户
                     </label>
                     <NumberInput
@@ -209,7 +209,7 @@ export default function RoadshowDeck({ open, onClose }: Props) {
               <FieldGroup title="增长节奏">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[10px] block mb-1" style={{ color: 'var(--text-muted)' }}>
+                    <label className="text-sm block mb-1" style={{ color: 'var(--text-muted)' }}>
                       月均增长率 (%)
                     </label>
                     <NumberInput
@@ -222,7 +222,7 @@ export default function RoadshowDeck({ open, onClose }: Props) {
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] block mb-1" style={{ color: 'var(--text-muted)' }}>
+                    <label className="text-sm block mb-1" style={{ color: 'var(--text-muted)' }}>
                       推演周期
                     </label>
                     <div className="flex gap-2">
@@ -230,7 +230,7 @@ export default function RoadshowDeck({ open, onClose }: Props) {
                         <button
                           key={m}
                           onClick={() => update('projectionMonths', m as 12 | 24 | 36)}
-                          className="flex-1 py-2 rounded-lg text-xs transition-all"
+                          className="flex-1 py-2 rounded-lg text-sm transition-all"
                           style={
                             scenario.projectionMonths === m
                               ? {
@@ -259,13 +259,15 @@ export default function RoadshowDeck({ open, onClose }: Props) {
                   type="text"
                   value={scenario.name}
                   onChange={(e) => update('name', e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg text-xs outline-none transition-colors"
+                  className="w-full px-3 py-2 rounded-lg text-sm outline-none transition-colors focus:border-blue-400/40"
                   style={{
                     background: 'rgba(255,255,255,0.04)',
                     color: 'var(--text-main)',
                     border: '1px solid rgba(126, 190, 255, 0.15)',
                   }}
                   placeholder="输入方案名称..."
+                  onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(74, 184, 255, 0.4)' }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(126, 190, 255, 0.15)' }}
                 />
               </FieldGroup>
             </div>
@@ -289,7 +291,7 @@ export default function RoadshowDeck({ open, onClose }: Props) {
               <div className="flex gap-2">
                 <button
                   onClick={handleReset}
-                  className="flex-1 py-2.5 rounded-xl text-xs transition-all hover:bg-white/[0.04]"
+                  className="flex-1 py-2.5 rounded-xl text-sm transition-all hover:bg-white/[0.04]"
                   style={{
                     background: 'transparent',
                     color: 'var(--text-muted)',
@@ -300,7 +302,7 @@ export default function RoadshowDeck({ open, onClose }: Props) {
                 </button>
                 <button
                   onClick={onClose}
-                  className="flex-1 py-2.5 rounded-xl text-xs transition-all hover:bg-white/[0.04]"
+                  className="flex-1 py-2.5 rounded-xl text-sm transition-all hover:bg-white/[0.04]"
                   style={{
                     background: 'transparent',
                     color: 'var(--text-sub)',
@@ -320,7 +322,7 @@ export default function RoadshowDeck({ open, onClose }: Props) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[100] px-4 py-2 rounded-lg text-xs"
+                className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[100] px-4 py-2 rounded-lg text-sm"
                 style={{
                   background: 'rgba(74, 184, 255, 0.15)',
                   color: 'var(--blue-core)',
@@ -342,7 +344,7 @@ export default function RoadshowDeck({ open, onClose }: Props) {
 function FieldGroup({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h3 className="text-xs font-medium mb-3" style={{ color: 'var(--text-main)' }}>
+      <h3 className="text-sm font-medium mb-3" style={{ color: 'var(--text-main)' }}>
         {title}
       </h3>
       {children}
@@ -370,7 +372,7 @@ function NumberInput({
   return (
     <div className="flex items-center">
       {prefix && (
-        <span className="text-xs px-2 py-2 rounded-l-lg border border-r-0" style={{
+        <span className="text-sm px-2 py-2 rounded-l-lg border border-r-0" style={{
           background: 'rgba(255,255,255,0.04)',
           color: 'var(--text-muted)',
           borderColor: 'rgba(126, 190, 255, 0.15)',
@@ -385,16 +387,18 @@ function NumberInput({
         max={max}
         step={step}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="flex-1 px-3 py-2 text-xs outline-none transition-colors"
+        className="flex-1 px-3 py-2 text-sm outline-none transition-colors"
         style={{
           background: 'rgba(255,255,255,0.04)',
           color: 'var(--text-main)',
           border: '1px solid rgba(126, 190, 255, 0.15)',
           borderRadius: prefix || suffix ? '0' : '0.5rem',
         }}
+        onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(74, 184, 255, 0.4)' }}
+        onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(126, 190, 255, 0.15)' }}
       />
       {suffix && (
-        <span className="text-xs px-2 py-2 rounded-r-lg border border-l-0" style={{
+        <span className="text-sm px-2 py-2 rounded-r-lg border border-l-0" style={{
           background: 'rgba(255,255,255,0.04)',
           color: 'var(--text-muted)',
           borderColor: 'rgba(126, 190, 255, 0.15)',
