@@ -46,7 +46,13 @@ const NAV_GROUPS = [
   },
 ]
 
-export default function MainShell({ children }: { children: ReactNode }) {
+export default function MainShell({
+  children,
+  onStartRoadshow,
+}: {
+  children: ReactNode
+  onStartRoadshow?: () => void
+}) {
   const {
     currentSection,
     setSection,
@@ -142,10 +148,16 @@ export default function MainShell({ children }: { children: ReactNode }) {
               ))}
             </div>
 
-            {/* Actions — 一键讲解 */}
+            {/* Actions — 开始路演 */}
             <div className="flex items-center gap-3 flex-shrink-0">
               <button
-                onClick={() => setPresentationMode(!isPresentationMode)}
+                onClick={() => {
+                  if (isPresentationMode) {
+                    setPresentationMode(false)
+                  } else if (onStartRoadshow) {
+                    onStartRoadshow()
+                  }
+                }}
                 className={`px-4 py-2 rounded-lg text-xs border transition-all ${isPresentationMode ? '' : 'hover:text-accent-gold hover:border-accent-gold/25'}`}
                 style={
                   isPresentationMode
@@ -162,7 +174,7 @@ export default function MainShell({ children }: { children: ReactNode }) {
                       }
                 }
               >
-                {isPresentationMode ? '退出讲解' : '一键讲解'}
+                {isPresentationMode ? '退出路演' : '开始路演'}
               </button>
             </div>
           </motion.nav>
