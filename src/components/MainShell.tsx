@@ -52,8 +52,6 @@ export default function MainShell({ children }: { children: ReactNode }) {
     setSection,
     isPresentationMode,
     setPresentationMode,
-    exhibitionMode,
-    setExhibitionMode,
   } = useExhibitionStore()
 
   const showNav = currentSection !== 'intro'
@@ -144,55 +142,8 @@ export default function MainShell({ children }: { children: ReactNode }) {
               ))}
             </div>
 
-            {/* Actions — 模式切换 + 一键讲解 */}
+            {/* Actions — 一键讲解 */}
             <div className="flex items-center gap-3 flex-shrink-0">
-              {/* 客户 / 讲解人模式切换 */}
-              <div
-                className="flex items-center rounded-full px-1 py-1"
-                style={{
-                  background: 'var(--bg-panel)',
-                  border: '1px solid rgba(126, 190, 255, 0.12)',
-                }}
-              >
-                <button
-                  onClick={() => setExhibitionMode('client')}
-                  className="px-3 py-1 rounded-full text-[11px] transition-all"
-                  style={
-                    exhibitionMode === 'client'
-                      ? {
-                          background: 'rgba(74, 184, 255, 0.12)',
-                          color: 'var(--blue-core)',
-                          border: '1px solid rgba(74, 184, 255, 0.3)',
-                        }
-                      : {
-                          color: 'var(--text-muted)',
-                          border: '1px solid transparent',
-                        }
-                  }
-                >
-                  客户演示
-                </button>
-                <button
-                  onClick={() => setExhibitionMode('presenter')}
-                  className="px-3 py-1 rounded-full text-[11px] transition-all"
-                  style={
-                    exhibitionMode === 'presenter'
-                      ? {
-                          background: 'rgba(246, 201, 107, 0.12)',
-                          color: 'var(--gold-core)',
-                          border: '1px solid rgba(246, 201, 107, 0.3)',
-                        }
-                      : {
-                          color: 'var(--text-muted)',
-                          border: '1px solid transparent',
-                        }
-                  }
-                >
-                  讲解人
-                </button>
-              </div>
-
-              {/* 一键讲解 */}
               <button
                 onClick={() => setPresentationMode(!isPresentationMode)}
                 className={`px-4 py-2 rounded-lg text-xs border transition-all ${isPresentationMode ? '' : 'hover:text-accent-gold hover:border-accent-gold/25'}`}
@@ -236,7 +187,7 @@ export default function MainShell({ children }: { children: ReactNode }) {
               展厅运行中
             </span>
             <span>神枢全国算力生态数字展厅 V2.0</span>
-            <span>{exhibitionMode === 'client' ? '客户演示模式' : '讲解人模式'}</span>
+            <span>路演推演模式</span>
           </div>
           <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
             {new Date().toLocaleDateString('zh-CN')} | 神枢算力权益通
