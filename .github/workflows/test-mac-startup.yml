@@ -19,6 +19,16 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Fix permissions (Windows git may lose +x)
+        run: |
+          set -e
+          echo "=== 强制修复可执行权限 ==="
+          chmod +x start-mac.command
+          chmod +x "offline-package/启动展厅.command"
+          chmod +x "offline-package/runtime/展厅服务-mac-arm64" 2>/dev/null || true
+          chmod +x "offline-package/runtime/展厅服务-mac-x64" 2>/dev/null || true
+          ls -la offline-package/runtime/
+
       - name: Check file structure
         run: |
           set -e
@@ -168,7 +178,7 @@ jobs:
         run: |
           set -e
           echo "=== 执行权限检查 ==="
-          chmod +x start-mac.command
-          chmod +x "offline-package/启动展厅.command"
           test -x start-mac.command && echo "✅ start-mac.command 可执行" || (echo "❌ 权限不足" && exit 1)
           test -x "offline-package/启动展厅.command" && echo "✅ 启动展厅.command 可执行" || (echo "❌ 权限不足" && exit 1)
+          test -x "offline-package/runtime/展厅服务-mac-arm64" && echo "✅ 展厅服务-mac-arm64 可执行" || echo "⚠️ 展厅服务-mac-arm64 不可执行（非 arm64 环境可忽略）"
+          test -x "offline-package/runtime/展厅服务-mac-x64" && echo "✅ 展厅服务-mac-x64 可执行" || echo "⚠️ 展厅服务-mac-x64 不可执行（非 x64 环境可忽略）"
