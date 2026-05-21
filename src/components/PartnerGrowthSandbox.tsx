@@ -376,6 +376,31 @@ export default function PartnerGrowthSandbox() {
         </button>
       </div>
 
+      {/* 推演参数看板 — 路演讲解用 */}
+      <div className="flex-shrink-0 flex items-center gap-3 mb-4 overflow-x-auto pb-1">
+        {[
+          { label: '个人投入', value: `¥${scenario.personalInvestment.toLocaleString()}`, color: 'var(--gold-core)' },
+          { label: '邀请客户', value: `${scenario.invitedCustomers}人`, color: 'var(--blue-core)' },
+          { label: '转化率', value: `${Math.round(scenario.conversionRate * 100)}%`, color: 'var(--cyan-flow)' },
+          { label: '客户人均投入', value: `¥${scenario.averageCustomerInvestment.toLocaleString()}`, color: 'var(--gold-core)' },
+          { label: '月新增客户', value: `${scenario.monthlyNewCustomers}人`, color: 'var(--blue-core)' },
+          { label: '月均增长率', value: `${Math.round(scenario.monthlyGrowthRate * 100)}%`, color: 'var(--cyan-flow)' },
+          { label: '推演周期', value: `${scenario.projectionMonths}个月`, color: 'var(--purple-accent, #7C5CFF)' },
+        ].map((item) => (
+          <div
+            key={item.label}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg flex-shrink-0"
+            style={{
+              background: 'rgba(11, 20, 36, 0.6)',
+              border: '1px solid rgba(126, 190, 255, 0.1)',
+            }}
+          >
+            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{item.label}</span>
+            <span className="text-sm font-bold" style={{ color: item.color }}>{item.value}</span>
+          </div>
+        ))}
+      </div>
+
       {/* 主内容区 — 三栏布局 */}
       <div className="flex-1 grid grid-cols-12 gap-4 min-h-0">
         {/* 左侧：身份阶梯 */}
