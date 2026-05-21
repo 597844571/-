@@ -27,7 +27,7 @@ export type PartnerIdentity =
 
 export const IDENTITY_LABELS: Record<PartnerIdentity, string> = {
   member: '普通会员',
-  team_leader: '团队长 / 服务网点',
+  team_leader: '团队长',
   partner_10000: '1万合伙人',
   partner_30000: '3万合伙人',
   partner_50000: '5万合伙人',

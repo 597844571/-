@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useExhibitionStore } from '../store/exhibitionStore'
 import { IDENTITY_LABELS } from '../data/roadshowPreset'
@@ -72,7 +72,7 @@ function GrowthTrack({ track, months }: { track: GrowthResult['monthlyTrack']; m
 
   const maxVal = Math.max(...data.map((d) => d.equityShare))
   const w = 800
-  const h = 200
+  const h = 120
   const padding = 40
 
   const points = data.map((d, i) => {
@@ -141,6 +141,65 @@ function GrowthTrack({ track, months }: { track: GrowthResult['monthlyTrack']; m
           )
         })}
       </svg>
+    </div>
+  )
+}
+
+/** 增长轨道面板 — 可折叠 */
+function GrowthTrackPanel({ track, months }: { track: GrowthResult['monthlyTrack']; months: number }) {
+  const [expanded, setExpanded] = useState(false)
+  const data = track.slice(0, months)
+  const finalValue = data[data.length - 1]?.equityShare ?? 0
+
+  return (
+    <div
+      className="mt-4 rounded-xl p-4 flex-shrink-0"
+      style={{
+        background: 'rgba(11, 20, 36, 0.5)',
+        border: '1px solid rgba(126, 190, 255, 0.08)',
+      }}
+    >
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center justify-between text-left"
+      >
+        <div className="flex items-center gap-3">
+          <h3 className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
+            增长轨道
+          </h3>
+          <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(74,184,255,0.1)', color: 'var(--blue-core)', border: '1px solid rgba(74,184,255,0.2)' }}>
+            {months}个月
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-xs" style={{ color: 'var(--text-sub)' }}>
+            期末权益分成 <span className="font-bold" style={{ color: 'var(--gold-core)' }}>¥{finalValue.toLocaleString()}</span>
+          </span>
+          <svg
+            width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+            className="transition-transform"
+            style={{
+              color: 'var(--text-muted)',
+              transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
+            }}
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </div>
+      </button>
+      {expanded && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          transition={{ duration: 0.3 }}
+          className="mt-3 overflow-hidden"
+        >
+          <div style={{ height: '140px' }}>
+            <GrowthTrack track={track} months={months} />
+          </div>
+        </motion.div>
+      )}
     </div>
   )
 }
@@ -302,7 +361,7 @@ export default function PartnerGrowthSandbox() {
       {/* 主内容区 — 三栏布局 */}
       <div className="flex-1 grid grid-cols-12 gap-4 min-h-0">
         {/* 左侧：身份阶梯 */}
-        <div className="col-span-3 flex flex-col gap-3 overflow-y-auto pr-2 scrollbar-thin" style={{ maxHeight: 'calc(100vh - 280px)' }}>
+        <div className="col-span-3 flex flex-col gap-3 overflow-y-auto pr-2 scrollbar-thin h-full">
           <h3 className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
             身份阶梯
           </h3>
@@ -438,7 +497,7 @@ export default function PartnerGrowthSandbox() {
         </div>
 
         {/* 右侧：收益铭牌 */}
-        <div className="col-span-4 flex flex-col gap-3 overflow-y-auto pr-1 scrollbar-thin" style={{ maxHeight: 'calc(100vh - 280px)' }}>
+        <div className="col-span-4 flex flex-col gap-3 overflow-y-auto pr-1 scrollbar-thin h-full">
           <h3 className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
             收益铭牌
           </h3>
@@ -492,24 +551,8 @@ export default function PartnerGrowthSandbox() {
         </div>
       </div>
 
-      {/* 底部：增长轨道 */}
-      <div
-        className="mt-4 rounded-xl p-4"
-        style={{
-          background: 'rgba(11, 20, 36, 0.5)',
-          border: '1px solid rgba(126, 190, 255, 0.08)',
-        }}
-      >
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
-            增长轨道
-          </h3>
-          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-            权益分成逐月走势
-          </span>
-        </div>
-        <GrowthTrack track={result.monthlyTrack} months={scenario.projectionMonths} />
-      </div>
+      {/* 底部：增长轨道（可折叠） */}
+      <GrowthTrackPanel track={result.monthlyTrack} months={scenario.projectionMonths} />
     </div>
   )
 }
