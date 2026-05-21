@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import type { PartnerGrowthScenario } from '../data/roadshowPreset'
 
 export type ExhibitionSection =
   | 'intro'
@@ -95,9 +96,13 @@ export interface ExhibitionState {
   isPresentationPaused: boolean
   setPresentationPaused: (paused: boolean) => void
 
-  // 路演参数舱（路演推演参数入口）
+  // 路演参数舱
   showRoadshowDeck: boolean
   setShowRoadshowDeck: (show: boolean) => void
+
+  // 当前推演参数（实时同步到主画面）
+  currentScenario: PartnerGrowthScenario | null
+  setCurrentScenario: (scenario: PartnerGrowthScenario | null) => void
 
   // Intro
   introComplete: boolean
@@ -172,6 +177,9 @@ export const useExhibitionStore = create<ExhibitionState>((set) => ({
 
   showRoadshowDeck: false,
   setShowRoadshowDeck: (show) => set({ showRoadshowDeck: show }),
+
+  currentScenario: null,
+  setCurrentScenario: (scenario) => set({ currentScenario: scenario }),
 
   introComplete: false,
   setIntroComplete: (complete) => set({ introComplete: complete }),

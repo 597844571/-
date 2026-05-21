@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useExhibitionStore } from './store/exhibitionStore'
 import GlobalBackground from './components/GlobalBackground'
@@ -21,8 +21,8 @@ import FutureProjection from './components/FutureProjection'
 import StrategicArchive from './components/StrategicArchive'
 import PresentationPlayer from './components/PresentationPlayer'
 import EndingPage from './components/EndingPage'
-import PresentationStartDialog from './components/PresentationStartDialog'
 import RoadshowDeck from './components/RoadshowDeck'
+import { loadEffectiveScenario } from './utils/scenarioStorage'
 
 const sectionComponents: Record<string, React.FC> = {
   strategic: StrategicOverview,
@@ -62,8 +62,12 @@ function SectionWrapper({ sectionKey }: { sectionKey: string }) {
 }
 
 function App() {
-  const { currentSection, introComplete, isPresentationMode, showRoadshowDeck, setShowRoadshowDeck } = useExhibitionStore()
-  const [showStartDialog, setShowStartDialog] = useState(false)
+  const { currentSection, introComplete, isPresentationMode, showRoadshowDeck, setShowRoadshowDeck, setCurrentScenario } = useExhibitionStore()
+
+  // 初始化：加载有效方案到 currentScenario
+  useEffect(() => {
+    setCurrentScenario(loadEffectiveScenario())
+  }, [setCurrentScenario])
 
   // 全局快捷键：Ctrl+Shift+G 打开路演参数舱
   useEffect(() => {
@@ -84,7 +88,7 @@ function App() {
   return (
     <div className="relative w-full h-full overflow-hidden" style={{ background: 'var(--bg-deep, #02040a)' }}>
       <GlobalBackground />
-      <MainShell onStartRoadshow={() => setShowStartDialog(true)}>
+      <MainShell>
         <AnimatePresence mode="wait">
           <SectionWrapper sectionKey={currentSection} />
         </AnimatePresence>
@@ -92,9 +96,6 @@ function App() {
 
       {/* 路演模式播放器 */}
       {isPresentationMode && <PresentationPlayer />}
-
-      {/* 开始路演确认弹窗 */}
-      <PresentationStartDialog open={showStartDialog} onClose={() => setShowStartDialog(false)} />
 
       {/* 路演参数舱 */}
       <RoadshowDeck open={showRoadshowDeck} onClose={() => setShowRoadshowDeck(false)} />

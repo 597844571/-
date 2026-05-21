@@ -46,18 +46,13 @@ const NAV_GROUPS = [
   },
 ]
 
-export default function MainShell({
-  children,
-  onStartRoadshow,
-}: {
-  children: ReactNode
-  onStartRoadshow?: () => void
-}) {
+export default function MainShell({ children }: { children: ReactNode }) {
   const {
     currentSection,
     setSection,
     isPresentationMode,
     setPresentationMode,
+    setShowRoadshowDeck,
   } = useExhibitionStore()
 
   const showNav = currentSection !== 'intro'
@@ -148,34 +143,36 @@ export default function MainShell({
               ))}
             </div>
 
-            {/* Actions — 开始路演 */}
+            {/* Actions */}
             <div className="flex items-center gap-3 flex-shrink-0">
+              {/* 路演参数舱入口 */}
               <button
-                onClick={() => {
-                  if (isPresentationMode) {
-                    setPresentationMode(false)
-                  } else if (onStartRoadshow) {
-                    onStartRoadshow()
-                  }
+                onClick={() => setShowRoadshowDeck(true)}
+                className="px-4 py-2 rounded-lg text-xs border transition-all hover:text-accent-gold hover:border-accent-gold/25"
+                style={{
+                  background: 'rgba(15, 25, 48, 0.5)',
+                  color: 'var(--text-muted)',
+                  borderColor: 'var(--border-light)',
                 }}
-                className={`px-4 py-2 rounded-lg text-xs border transition-all ${isPresentationMode ? '' : 'hover:text-accent-gold hover:border-accent-gold/25'}`}
-                style={
-                  isPresentationMode
-                    ? {
-                        background: 'rgba(246, 201, 107, 0.12)',
-                        color: 'var(--gold-core)',
-                        borderColor: 'rgba(246, 201, 107, 0.35)',
-                        boxShadow: '0 0 12px rgba(246,201,107,0.1)',
-                      }
-                    : {
-                        background: 'rgba(15, 25, 48, 0.5)',
-                        color: 'var(--text-muted)',
-                        borderColor: 'var(--border-light)',
-                      }
-                }
               >
-                {isPresentationMode ? '退出路演' : '开始路演'}
+                路演参数舱
               </button>
+
+              {/* 退出路演模式 */}
+              {isPresentationMode && (
+                <button
+                  onClick={() => setPresentationMode(false)}
+                  className="px-4 py-2 rounded-lg text-xs border transition-all"
+                  style={{
+                    background: 'rgba(246, 201, 107, 0.12)',
+                    color: 'var(--gold-core)',
+                    borderColor: 'rgba(246, 201, 107, 0.35)',
+                    boxShadow: '0 0 12px rgba(246,201,107,0.1)',
+                  }}
+                >
+                  退出路演
+                </button>
+              )}
             </div>
           </motion.nav>
         )}

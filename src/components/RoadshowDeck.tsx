@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useExhibitionStore } from '../store/exhibitionStore'
 import type { PartnerGrowthScenario, PartnerIdentity } from '../data/roadshowPreset'
 import { IDENTITY_LABELS, DEFAULT_SCENARIO } from '../data/roadshowPreset'
 import { saveScenario, resetToDefault, loadEffectiveScenario } from '../utils/scenarioStorage'
@@ -20,6 +21,7 @@ const IDENTITY_OPTIONS: { value: PartnerIdentity; label: string }[] = [
 ]
 
 export default function RoadshowDeck({ open, onClose }: Props) {
+  const { setCurrentScenario } = useExhibitionStore()
   const [scenario, setScenario] = useState<PartnerGrowthScenario>(DEFAULT_SCENARIO)
   const [savedToast, setSavedToast] = useState(false)
 
@@ -37,8 +39,11 @@ export default function RoadshowDeck({ open, onClose }: Props) {
     setScenario((prev) => ({ ...prev, [key]: value }))
   }
 
-  const handleSave = () => {
+  const handleStart = () => {
+    // 保存到 localStorage
     saveScenario(scenario)
+    // 实时同步到主画面
+    setCurrentScenario(scenario)
     setSavedToast(true)
     setTimeout(() => setSavedToast(false), 2000)
     onClose()
@@ -48,6 +53,7 @@ export default function RoadshowDeck({ open, onClose }: Props) {
     if (confirm('确定恢复默认方案？当前自定义数据将被清除。')) {
       resetToDefault()
       setScenario(DEFAULT_SCENARIO)
+      setCurrentScenario(DEFAULT_SCENARIO)
     }
   }
 
@@ -270,7 +276,7 @@ export default function RoadshowDeck({ open, onClose }: Props) {
               style={{ borderColor: 'rgba(126, 190, 255, 0.08)' }}
             >
               <button
-                onClick={handleSave}
+                onClick={handleStart}
                 className="w-full py-3 rounded-xl text-sm font-medium transition-all hover:brightness-110"
                 style={{
                   background: 'linear-gradient(135deg, rgba(74,184,255,0.15), rgba(124,92,255,0.15))',
@@ -278,7 +284,7 @@ export default function RoadshowDeck({ open, onClose }: Props) {
                   border: '1px solid rgba(74, 184, 255, 0.35)',
                 }}
               >
-                保存并返回展示
+                开始推演
               </button>
               <div className="flex gap-2">
                 <button
