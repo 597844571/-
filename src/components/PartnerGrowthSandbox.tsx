@@ -65,81 +65,99 @@ function RevenueBadge({
   )
 }
 
-/** 增长轨道 — SVG 折线 */
+/** 增长轨道 — SVG 折线（带 Y 轴刻度、数值标签、悬停提示） */
 function GrowthTrack({ track, months }: { track: GrowthResult['monthlyTrack']; months: number }) {
   const data = track.slice(0, months)
   if (data.length === 0) return null
 
   const maxVal = Math.max(...data.map((d) => d.equityShare))
   const w = 800
-  const h = 120
-  const padding = 40
+  const h = 160
+  const padLeft = 72
+  const padRight = 24
+  const padTop = 24
+  const padBottom = 32
 
-  const points = data.map((d, i) => {
-    const x = padding + (i / (data.length - 1)) * (w - padding * 2)
-    const y = h - padding - (d.equityShare / (maxVal || 1)) * (h - padding * 2)
-    return `${x},${y}`
-  }).join(' ')
+  const chartW = w - padLeft - padRight
+  const chartH = h - padTop - padBottom
+
+  const getX = (i: number) => padLeft + (i / (data.length - 1)) * chartW
+  const getY = (v: number) => padTop + chartH - (v / (maxVal || 1)) * chartH
+
+  const points = data.map((d, i) => `${getX(i)},${getY(d.equityShare)}`).join(' ')
+
+  // Y 轴刻度：取 0、一半、最大值，格式化
+  const yTicks = [0, Math.round(maxVal / 2), Math.round(maxVal)]
+  const formatK = (v: number) => v >= 10000 ? `${(v / 10000).toFixed(0)}万` : `${v}`
+
+  // 显示数值标签的节点：起点、终点、中间取 2 个
+  const labelIndices = [0, Math.floor(data.length / 3), Math.floor((data.length * 2) / 3), data.length - 1]
 
   return (
     <div className="w-full overflow-x-auto">
       <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{ minWidth: '600px' }}>
-        {/* 网格线 */}
-        {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
-          const y = h - padding - ratio * (h - padding * 2)
-          return (
-            <line
-              key={ratio}
-              x1={padding}
-              y1={y}
-              x2={w - padding}
-              y2={y}
-              stroke="rgba(126, 190, 255, 0.06)"
-              strokeWidth="0.5"
-            />
-          )
-        })}
-        {/* 折线 */}
-        <polyline
-          points={points}
-          fill="none"
-          stroke="url(#trackGradient)"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        {/* 渐变填充 */}
         <defs>
           <linearGradient id="trackGradient" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#4AB8FF" />
             <stop offset="100%" stopColor="#7C5CFF" />
           </linearGradient>
           <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="rgba(74, 184, 255, 0.15)" />
+            <stop offset="0%" stopColor="rgba(74, 184, 255, 0.12)" />
             <stop offset="100%" stopColor="rgba(74, 184, 255, 0)" />
           </linearGradient>
         </defs>
+
+        {/* Y 轴刻度线与标签 */}
+        {yTicks.map((tick) => {
+          const y = getY(tick)
+          return (
+            <g key={tick}>
+              <line x1={padLeft} y1={y} x2={w - padRight} y2={y} stroke="rgba(126, 190, 255, 0.06)" strokeWidth="0.5" />
+              <text x={padLeft - 8} y={y + 4} textAnchor="end" fill="#6F7F9F" fontSize="11">{formatK(tick)}</text>
+            </g>
+          )
+        })}
+
         {/* 填充区域 */}
         <polygon
-          points={`${padding},${h - padding} ${points} ${w - padding},${h - padding}`}
+          points={`${padLeft},${padTop + chartH} ${points} ${w - padRight},${padTop + chartH}`}
           fill="url(#areaGradient)"
         />
-        {/* 数据点 */}
+
+        {/* 折线 */}
+        <polyline points={points} fill="none" stroke="url(#trackGradient)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+
+        {/* 数据点 + 标签 + 悬停提示 */}
         {data.map((d, i) => {
-          const x = padding + (i / (data.length - 1)) * (w - padding * 2)
-          const y = h - padding - (d.equityShare / (maxVal || 1)) * (h - padding * 2)
+          const x = getX(i)
+          const y = getY(d.equityShare)
+          const showLabel = labelIndices.includes(i)
           return (
             <g key={i}>
+              {/* 悬停提示（SVG title） */}
+              <title>第{d.month}月：权益分成 ¥{d.equityShare.toLocaleString()}</title>
+              {/* 外发光圈 */}
+              <circle cx={x} cy={y} r="6" fill="rgba(74,184,255,0.15)" />
+              {/* 数据点 */}
               <circle cx={x} cy={y} r="3" fill="#4AB8FF" />
-              {/* 悬停标签（简化，直接显示） */}
+              {/* 数值标签（关键节点） */}
+              {showLabel && (
+                <text x={x} y={y - 10} textAnchor="middle" fill="#F6C96B" fontSize="11" fontWeight="bold">
+                  ¥{(d.equityShare / 10000).toFixed(1)}万
+                </text>
+              )}
+              {/* X 轴月份标签 */}
               {i % Math.ceil(data.length / 6) === 0 && (
-                <text x={x} y={h - padding + 16} textAnchor="middle" fill="#6F7F9F" fontSize="10">
+                <text x={x} y={padTop + chartH + 18} textAnchor="middle" fill="#6F7F9F" fontSize="12">
                   {d.month}月
                 </text>
               )}
             </g>
           )
         })}
+
+        {/* Y 轴标题 */}
+        <text x={16} y={padTop - 6} fill="#6F7F9F" fontSize="11">权益分成 (¥)</text>
       </svg>
     </div>
   )
@@ -195,7 +213,7 @@ function GrowthTrackPanel({ track, months }: { track: GrowthResult['monthlyTrack
           transition={{ duration: 0.3 }}
           className="mt-3 overflow-hidden"
         >
-          <div style={{ height: '140px' }}>
+          <div style={{ height: '180px' }}>
             <GrowthTrack track={track} months={months} />
           </div>
         </motion.div>
