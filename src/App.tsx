@@ -12,8 +12,8 @@ import RegionalModel from './components/RegionalModel'
 import MachineRoom3D from './components/MachineRoom3D'
 import ConsumptionDemo from './components/ConsumptionDemo'
 import AssetFlowEngine from './components/AssetFlowEngine'
-import GrowthPoolFlywheel from './components/GrowthPoolFlywheel'
 import RightsSeatSandbox from './components/RightsSeatSandbox'
+import PartnerGrowthSandbox from './components/PartnerGrowthSandbox'
 import EnterpriseScene from './components/EnterpriseScene'
 import IdentityGuide from './components/IdentityGuide'
 import CooperationRoadmap from './components/CooperationRoadmap'
@@ -33,7 +33,7 @@ const sectionComponents: Record<string, React.FC> = {
   machineRoom: MachineRoom3D,
   consumption: ConsumptionDemo,
   assetFlow: AssetFlowEngine,
-  growthPool: GrowthPoolFlywheel,
+  growthPool: PartnerGrowthSandbox,
   rights: RightsSeatSandbox,
   enterprise: EnterpriseScene,
   identityGuide: IdentityGuide,
