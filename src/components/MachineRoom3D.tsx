@@ -7,6 +7,93 @@ import * as THREE from 'three'
 import { useExhibitionStore } from '../store/exhibitionStore'
 import machineRoomData from '../data/machineRoom.json'
 
+/* ========== 硬件图标（简化 SVG） ========== */
+function IconGPU({ size, active }: { size: number; active?: boolean }) {
+  const c = active ? '#4AB8FF' : '#6F7F9F'
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.5">
+      <rect x="3" y="6" width="18" height="12" rx="2" />
+      <line x1="7" y1="10" x2="7" y2="14" />
+      <line x1="11" y1="10" x2="11" y2="14" />
+      <line x1="15" y1="10" x2="15" y2="14" />
+      <circle cx="18" cy="18" r="1.5" fill={c} stroke="none" />
+    </svg>
+  )
+}
+function IconRack({ size, active }: { size: number; active?: boolean }) {
+  const c = active ? '#31F4FF' : '#6F7F9F'
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.5">
+      <rect x="6" y="3" width="12" height="18" rx="1" />
+      <line x1="6" y1="8" x2="18" y2="8" />
+      <line x1="6" y1="13" x2="18" y2="13" />
+      <line x1="6" y1="18" x2="18" y2="18" />
+      <circle cx="9" cy="15.5" r="0.8" fill={c} stroke="none" />
+    </svg>
+  )
+}
+function IconNetwork({ size, active }: { size: number; active?: boolean }) {
+  const c = active ? '#7C5CFF' : '#6F7F9F'
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.5">
+      <rect x="4" y="10" width="16" height="4" rx="1" />
+      <circle cx="8" cy="12" r="1" fill={c} stroke="none" />
+      <circle cx="12" cy="12" r="1" fill={c} stroke="none" />
+      <circle cx="16" cy="12" r="1" fill={c} stroke="none" />
+      <line x1="12" y1="6" x2="12" y2="10" />
+      <line x1="12" y1="14" x2="12" y2="18" />
+    </svg>
+  )
+}
+function IconStorage({ size, active }: { size: number; active?: boolean }) {
+  const c = active ? '#F6C96B' : '#6F7F9F'
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.5">
+      <rect x="5" y="4" width="14" height="16" rx="2" />
+      <line x1="5" y1="9" x2="19" y2="9" />
+      <line x1="5" y1="15" x2="19" y2="15" />
+      <circle cx="9" cy="12" r="1" fill={c} stroke="none" />
+    </svg>
+  )
+}
+function IconCooling({ size, active }: { size: number; active?: boolean }) {
+  const c = active ? '#4ECDC4' : '#6F7F9F'
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.5">
+      <circle cx="12" cy="12" r="7" />
+      <path d="M12 5v3M12 16v3M5 12h3M16 12h3M7.05 7.05l2.12 2.12M14.83 14.83l2.12 2.12M7.05 16.95l2.12-2.12M14.83 9.17l2.12-2.12" />
+    </svg>
+  )
+}
+function IconPower({ size, active }: { size: number; active?: boolean }) {
+  const c = active ? '#FF8C42' : '#6F7F9F'
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.5">
+      <path d="M13 2L4.09 12.11a2 2 0 0 0 .56 3.09l.68.34a2 2 0 0 0 2.18-.18L13 11V2z" />
+      <path d="M13 11l-4.5 4.5a2 2 0 0 0-.18 2.18l.34.68a2 2 0 0 0 3.09.56L13 11z" fill={active ? c + '20' : 'none'} />
+    </svg>
+  )
+}
+function IconSecurity({ size, active }: { size: number; active?: boolean }) {
+  const c = active ? '#95E1D3' : '#6F7F9F'
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.5">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <circle cx="12" cy="11" r="2.5" />
+    </svg>
+  )
+}
+
+const HARDWARE_ICONS: Record<string, React.FC<{ size: number; active?: boolean }>> = {
+  gpu_server: IconGPU,
+  server_rack: IconRack,
+  network_switch: IconNetwork,
+  storage_array: IconStorage,
+  cooling: IconCooling,
+  power: IconPower,
+  security: IconSecurity,
+}
+
 // Hologram scan line overlay
 function HologramScan({ active, width, height, color }: {
   active: boolean
@@ -509,21 +596,64 @@ export default function MachineRoom3D() {
 
       {/* Hardware list on left */}
       <div className="absolute left-8 top-24 bottom-24 z-30 flex flex-col justify-center">
-        <div className="glass-panel-strong rounded-xl p-4 w-56 space-y-1">
-          <div className="text-xs text-text-muted mb-2 tracking-wider">机房设备</div>
-          {machineRoomData.map((hw) => (
-            <button
-              key={hw.id}
-              onClick={() => setSelectedHardware(hw.id === selectedHardware ? null : hw.id)}
-              className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-all ${
-                selectedHardware === hw.id
-                  ? 'bg-primary-blue/15 text-primary-blue border border-primary-blue/30'
-                  : 'text-text-secondary hover:bg-white/5 hover:text-text-main'
-              }`}
-            >
-              {hw.name}
-            </button>
-          ))}
+        <div className="rounded-xl p-4 w-64 space-y-2"
+          style={{
+            background: 'rgba(7, 16, 28, 0.85)',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(126, 190, 255, 0.12)',
+          }}
+        >
+          <div className="text-xs tracking-wider mb-2 flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
+            <span className="w-1 h-1 rounded-full" style={{ background: 'var(--cyan-flow)' }} />
+            机房设备
+          </div>
+          {machineRoomData.map((hw) => {
+            const Icon = HARDWARE_ICONS[hw.id]
+            const isActive = selectedHardware === hw.id
+            return (
+              <button
+                key={hw.id}
+                onClick={() => setSelectedHardware(hw.id === selectedHardware ? null : hw.id)}
+                className="w-full text-left rounded-lg transition-all group"
+                style={{
+                  padding: '10px 12px',
+                  background: isActive ? 'rgba(74, 184, 255, 0.08)' : 'transparent',
+                  border: isActive ? '1px solid rgba(74, 184, 255, 0.25)' : '1px solid transparent',
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  {Icon && (
+                    <div
+                      className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors"
+                      style={{
+                        background: isActive ? 'rgba(74, 184, 255, 0.15)' : 'rgba(255,255,255,0.04)',
+                      }}
+                    >
+                      <Icon size={16} active={isActive} />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div
+                      className="text-xs font-medium truncate"
+                      style={{ color: isActive ? 'var(--blue-core)' : 'var(--text-main)' }}
+                    >
+                      {hw.name}
+                    </div>
+                    <div className="text-[10px] truncate mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                      {hw.description.slice(0, 20)}...
+                    </div>
+                  </div>
+                  <div
+                    className="w-1.5 h-1.5 rounded-full flex-shrink-0 transition-all"
+                    style={{
+                      background: isActive ? 'var(--cyan-flow)' : 'rgba(111, 127, 159, 0.3)',
+                      boxShadow: isActive ? '0 0 6px var(--cyan-flow)' : 'none',
+                    }}
+                  />
+                </div>
+              </button>
+            )
+          })}
         </div>
       </div>
 

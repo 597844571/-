@@ -259,9 +259,9 @@ export default function PartnerGrowthSandbox() {
   const identityLabel = IDENTITY_LABELS[scenario.identity] ?? '普通会员'
 
   return (
-    <div className="relative w-full h-full overflow-hidden flex flex-col p-6">
+    <div className="relative w-full h-full overflow-hidden flex flex-col p-6 pt-20">
       {/* 顶部标题 */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 flex-shrink-0">
         <div>
           <h2 className="text-lg font-bold" style={{ color: 'var(--text-main)' }}>
             合伙权益增长沙盘
@@ -291,7 +291,7 @@ export default function PartnerGrowthSandbox() {
       {/* 主内容区 — 三栏布局 */}
       <div className="flex-1 grid grid-cols-12 gap-4 min-h-0">
         {/* 左侧：身份阶梯 */}
-        <div className="col-span-3 flex flex-col gap-3 overflow-y-auto pr-2">
+        <div className="col-span-3 flex flex-col gap-3 overflow-y-auto pr-2" style={{ maxHeight: 'calc(100vh - 280px)' }}>
           <h3 className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
             身份阶梯
           </h3>
@@ -395,7 +395,7 @@ export default function PartnerGrowthSandbox() {
         </div>
 
         {/* 右侧：收益铭牌 */}
-        <div className="col-span-4 flex flex-col gap-3 overflow-y-auto">
+        <div className="col-span-4 flex flex-col gap-3 overflow-y-auto pr-1" style={{ maxHeight: 'calc(100vh - 280px)' }}>
           <h3 className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
             收益铭牌
           </h3>
