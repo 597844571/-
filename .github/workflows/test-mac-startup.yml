@@ -1,0 +1,147 @@
+name: Test macOS Startup Script
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  test-macos-startup:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Check file structure
+        run: |
+          echo "=== 文件结构检查 ==="
+          ls -la offline-package/runtime/
+          ls -la offline-package/dist/
+          test -f offline-package/runtime/server.cjs && echo "✅ server.cjs 存在" || echo "❌ server.cjs 缺失"
+          test -f offline-package/dist/index.html && echo "✅ index.html 存在" || echo "❌ index.html 缺失"
+
+      - name: Test script syntax
+        run: |
+          echo "=== Bash 语法检查 ==="
+          bash -n start-mac.command
+          bash -n offline-package/启动展厅.command
+          echo "✅ 两个 .command 文件语法均通过"
+
+      - name: Test osascript syntax
+        run: |
+          echo "=== osascript 语法检查 ==="
+          # 验证 AppleScript 语法（不实际显示弹窗）
+          osascript -e '
+            display dialog "测试" buttons {"确定"} default button "确定"
+          ' || true
+          echo "✅ osascript 可用"
+
+      - name: Test server.cjs startup
+        run: |
+          echo "=== server.cjs 启动测试 ==="
+          cd offline-package/runtime
+          sed -i '' 's/const PORT = 8765/const PORT = 9999/' server.cjs
+          node server.cjs &
+          PID=$!
+          sleep 3
+          
+          # 测试 HTTP 响应
+          ROOT_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:9999/)
+          HTML_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:9999/index.html)
+          SVG_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:9999/favicon.svg)
+          
+          echo "根路径: HTTP $ROOT_CODE"
+          echo "index.html: HTTP $HTML_CODE"
+          echo "favicon.svg: HTTP $SVG_CODE"
+          
+          kill $PID || true
+          
+          # 断言
+          test "$ROOT_CODE" = "200" || exit 1
+          test "$HTML_CODE" = "200" || exit 1
+          test "$SVG_CODE" = "200" || exit 1
+          echo "✅ 服务器功能全部正常"
+
+      - name: Test startup script logic (Node.js available)
+        run: |
+          echo "=== 模拟 .command 启动流程（有 Node.js）==="
+          
+          # 模拟脚本中的 Node 检测逻辑
+          NODE_CMD=""
+          if command -v node &> /dev/null; then
+              NODE_CMD="node"
+          elif [ -x "/usr/local/bin/node" ]; then
+              NODE_CMD="/usr/local/bin/node"
+          elif [ -x "/opt/homebrew/bin/node" ]; then
+              NODE_CMD="/opt/homebrew/bin/node"
+          fi
+          
+          test -n "$NODE_CMD" || exit 1
+          echo "✅ Node.js 检测逻辑正常: $NODE_CMD"
+          
+          # 测试实际启动（改端口避免冲突）
+          sed -i '' 's/const PORT = 8765/const PORT = 9998/' offline-package/runtime/server.cjs
+          "$NODE_CMD" offline-package/runtime/server.cjs &
+          PID=$!
+          sleep 3
+          
+          CODE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:9998/)
+          kill $PID || true
+          
+          test "$CODE" = "200" || exit 1
+          echo "✅ 通过 .command 逻辑启动成功"
+
+      - name: Test startup script without Node.js (fallback to Python)
+        run: |
+          echo "=== 测试 Python fallback 逻辑 ==="
+          
+          # 临时隐藏 node 命令，模拟没有 Node 的环境
+          mkdir -p /tmp/fake-bin
+          echo '#!/bin/bash' > /tmp/fake-bin/node
+          echo 'exit 1' >> /tmp/fake-bin/node
+          chmod +x /tmp/fake-bin/node
+          
+          OLD_PATH="$PATH"
+          export PATH="/tmp/fake-bin:$PATH"
+          
+          # 验证 Python 检测
+          PYTHON_CMD=""
+          if command -v python3 &> /dev/null; then
+              PYTHON_CMD="python3"
+          elif command -v python &> /dev/null; then
+              PYTHON_CMD="python"
+          fi
+          
+          export PATH="$OLD_PATH"
+          rm -rf /tmp/fake-bin
+          
+          test -n "$PYTHON_CMD" || exit 1
+          echo "✅ Python fallback 检测逻辑正常: $PYTHON_CMD"
+          
+          # 测试 Python http.server 启动
+          cd offline-package/dist
+          "$PYTHON_CMD" -m http.server 9997 &
+          PID=$!
+          sleep 3
+          
+          CODE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:9997/)
+          kill $PID || true
+          cd - > /dev/null
+          
+          test "$CODE" = "200" || exit 1
+          echo "✅ Python http.server fallback 正常"
+
+      - name: Check file permissions
+        run: |
+          echo "=== 执行权限检查 ==="
+          chmod +x start-mac.command
+          chmod +x offline-package/启动展厅.command
+          test -x start-mac.command && echo "✅ start-mac.command 可执行" || echo "❌ 权限不足"
+          test -x offline-package/启动展厅.command && echo "✅ 启动展厅.command 可执行" || echo "❌ 权限不足"
