@@ -21,34 +21,39 @@ jobs:
 
       - name: Check file structure
         run: |
+          set -e
           echo "=== 文件结构检查 ==="
           ls -la offline-package/runtime/
           ls -la offline-package/dist/
-          test -f offline-package/runtime/server.cjs && echo "✅ server.cjs 存在" || echo "❌ server.cjs 缺失"
-          test -f offline-package/dist/index.html && echo "✅ index.html 存在" || echo "❌ index.html 缺失"
+          test -f offline-package/runtime/server.cjs && echo "✅ server.cjs 存在" || (echo "❌ server.cjs 缺失" && exit 1)
+          test -f offline-package/dist/index.html && echo "✅ index.html 存在" || (echo "❌ index.html 缺失" && exit 1)
 
       - name: Test script syntax
         run: |
+          set -e
           echo "=== Bash 语法检查 ==="
           bash -n start-mac.command
-          bash -n offline-package/启动展厅.command
+          bash -n "offline-package/启动展厅.command"
           echo "✅ 两个 .command 文件语法均通过"
 
-      - name: Test osascript syntax
+      - name: Test osascript availability
         run: |
-          echo "=== osascript 语法检查 ==="
-          # 验证 AppleScript 语法（不实际显示弹窗）
-          osascript -e '
-            display dialog "测试" buttons {"确定"} default button "确定"
-          ' || true
+          set -e
+          echo "=== osascript 可用性检查 ==="
+          # 用不阻塞的命令验证 osascript 存在且工作
+          RESULT=$(osascript -e 'return "osascript_ok"')
+          test "$RESULT" = "osascript_ok" || exit 1
           echo "✅ osascript 可用"
 
       - name: Test server.cjs startup
         run: |
+          set -e
           echo "=== server.cjs 启动测试 ==="
-          cd offline-package/runtime
-          sed -i '' 's/const PORT = 8765/const PORT = 9999/' server.cjs
-          node server.cjs &
+          # 备份原文件
+          cp offline-package/runtime/server.cjs offline-package/runtime/server.cjs.bak
+          # 修改端口
+          sed -i '' 's/const PORT = 8765/const PORT = 9999/' offline-package/runtime/server.cjs
+          node offline-package/runtime/server.cjs &
           PID=$!
           sleep 3
           
@@ -62,6 +67,8 @@ jobs:
           echo "favicon.svg: HTTP $SVG_CODE"
           
           kill $PID || true
+          # 恢复备份
+          mv offline-package/runtime/server.cjs.bak offline-package/runtime/server.cjs
           
           # 断言
           test "$ROOT_CODE" = "200" || exit 1
@@ -71,6 +78,7 @@ jobs:
 
       - name: Test startup script logic (Node.js available)
         run: |
+          set -e
           echo "=== 模拟 .command 启动流程（有 Node.js）==="
           
           # 模拟脚本中的 Node 检测逻辑
@@ -87,6 +95,7 @@ jobs:
           echo "✅ Node.js 检测逻辑正常: $NODE_CMD"
           
           # 测试实际启动（改端口避免冲突）
+          cp offline-package/runtime/server.cjs offline-package/runtime/server.cjs.bak
           sed -i '' 's/const PORT = 8765/const PORT = 9998/' offline-package/runtime/server.cjs
           "$NODE_CMD" offline-package/runtime/server.cjs &
           PID=$!
@@ -94,12 +103,14 @@ jobs:
           
           CODE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:9998/)
           kill $PID || true
+          mv offline-package/runtime/server.cjs.bak offline-package/runtime/server.cjs
           
           test "$CODE" = "200" || exit 1
           echo "✅ 通过 .command 逻辑启动成功"
 
       - name: Test startup script without Node.js (fallback to Python)
         run: |
+          set -e
           echo "=== 测试 Python fallback 逻辑 ==="
           
           # 临时隐藏 node 命令，模拟没有 Node 的环境
@@ -138,10 +149,26 @@ jobs:
           test "$CODE" = "200" || exit 1
           echo "✅ Python http.server fallback 正常"
 
+      - name: Test native macOS launcher (arm64)
+        run: |
+          set -e
+          echo "=== Mac 原生启动器测试 ==="
+          ARCH=$(uname -m)
+          echo "当前架构: $ARCH"
+          
+          if [ "$ARCH" = "arm64" ]; then
+            test -x "offline-package/runtime/展厅服务-mac-arm64" || (echo "❌ arm64 启动器不可执行" && exit 1)
+            echo "✅ 展厅服务-mac-arm64 存在且可执行"
+          elif [ "$ARCH" = "x86_64" ]; then
+            test -x "offline-package/runtime/展厅服务-mac-x64" || (echo "❌ x64 启动器不可执行" && exit 1)
+            echo "✅ 展厅服务-mac-x64 存在且可执行"
+          fi
+
       - name: Check file permissions
         run: |
+          set -e
           echo "=== 执行权限检查 ==="
           chmod +x start-mac.command
-          chmod +x offline-package/启动展厅.command
-          test -x start-mac.command && echo "✅ start-mac.command 可执行" || echo "❌ 权限不足"
-          test -x offline-package/启动展厅.command && echo "✅ 启动展厅.command 可执行" || echo "❌ 权限不足"
+          chmod +x "offline-package/启动展厅.command"
+          test -x start-mac.command && echo "✅ start-mac.command 可执行" || (echo "❌ 权限不足" && exit 1)
+          test -x "offline-package/启动展厅.command" && echo "✅ 启动展厅.command 可执行" || (echo "❌ 权限不足" && exit 1)
