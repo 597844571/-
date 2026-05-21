@@ -2,52 +2,59 @@ import { type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useExhibitionStore, type ExhibitionSection } from '../store/exhibitionStore'
 
+/* ============================================================
+   V2.0 展厅导航轨道
+   命名统一为展厅风格，避免"系统/后台/管理"等词汇
+   ============================================================ */
+
 const NAV_GROUPS = [
   {
-    label: '战略',
+    label: '总览',
     items: [
-      { key: 'strategic' as ExhibitionSection, label: '战略总览' },
-      { key: 'architecture' as ExhibitionSection, label: '三层架构' },
-      { key: 'resources' as ExhibitionSection, label: '资源背书' },
+      { key: 'strategic' as ExhibitionSection, label: '数字展厅' },
     ],
   },
   {
     label: '布局',
     items: [
       { key: 'map' as ExhibitionSection, label: '全国布局' },
-      { key: 'regionalModel' as ExhibitionSection, label: '区域样板' },
-      { key: 'machineRoom' as ExhibitionSection, label: '三维机房' },
+      { key: 'machineRoom' as ExhibitionSection, label: '算力机房' },
+      { key: 'regionalModel' as ExhibitionSection, label: '区域扩张' },
     ],
   },
   {
-    label: '生态',
+    label: '架构',
     items: [
+      { key: 'architecture' as ExhibitionSection, label: '价值架构' },
+      { key: 'assetFlow' as ExhibitionSection, label: '资产引擎' },
       { key: 'consumption' as ExhibitionSection, label: '消费权益' },
-      { key: 'assetFlow' as ExhibitionSection, label: '资产流转' },
-      { key: 'growthPool' as ExhibitionSection, label: '增长飞轮' },
-      { key: 'rights' as ExhibitionSection, label: '权益沙盘' },
     ],
   },
   {
-    label: '合作',
+    label: '权益',
     items: [
-      { key: 'enterprise' as ExhibitionSection, label: '企业服务' },
-      { key: 'identityGuide' as ExhibitionSection, label: '身份导览' },
-      { key: 'cooperation' as ExhibitionSection, label: '落地路线' },
-      { key: 'future' as ExhibitionSection, label: '未来推演' },
+      { key: 'rights' as ExhibitionSection, label: '权益体系' },
+      { key: 'growthPool' as ExhibitionSection, label: '增长沙盘' },
     ],
   },
   {
-    label: '资料',
+    label: '未来',
     items: [
+      { key: 'future' as ExhibitionSection, label: '未来蓝图' },
       { key: 'archive' as ExhibitionSection, label: '资料舱' },
     ],
   },
 ]
 
 export default function MainShell({ children }: { children: ReactNode }) {
-  const { currentSection, setSection, isPresentationMode, setPresentationMode } =
-    useExhibitionStore()
+  const {
+    currentSection,
+    setSection,
+    isPresentationMode,
+    setPresentationMode,
+    exhibitionMode,
+    setExhibitionMode,
+  } = useExhibitionStore()
 
   const showNav = currentSection !== 'intro'
 
@@ -56,7 +63,7 @@ export default function MainShell({ children }: { children: ReactNode }) {
       {/* Content area */}
       <div className="w-full h-full">{children}</div>
 
-      {/* Floating Navigation */}
+      {/* Floating Navigation — 展厅导航轨道 */}
       <AnimatePresence>
         {showNav && (
           <motion.nav
@@ -66,7 +73,7 @@ export default function MainShell({ children }: { children: ReactNode }) {
             transition={{ duration: 0.6, ease: 'easeOut' }}
             className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-3"
             style={{
-              background: 'linear-gradient(180deg, rgba(2,4,10,0.92) 0%, rgba(2,4,10,0.4) 60%, transparent 100%)',
+              background: 'linear-gradient(180deg, rgba(3,5,10,0.92) 0%, rgba(3,5,10,0.4) 60%, transparent 100%)',
             }}
           >
             {/* Brand */}
@@ -74,7 +81,7 @@ export default function MainShell({ children }: { children: ReactNode }) {
               <div
                 className="w-8 h-8 rounded flex items-center justify-center"
                 style={{
-                  background: 'linear-gradient(135deg, #4ab8ff20, #8a6fff20)',
+                  background: 'linear-gradient(135deg, #4AB8FF20, #7C5CFF20)',
                   border: '1px solid rgba(74,184,255,0.25)',
                   boxShadow: '0 0 12px rgba(74,184,255,0.15), inset 0 1px 0 rgba(255,255,255,0.08)',
                 }}
@@ -82,16 +89,16 @@ export default function MainShell({ children }: { children: ReactNode }) {
                 <span className="text-white text-xs font-bold">神</span>
               </div>
               <div>
-                <div className="text-sm font-bold tracking-wider text-text-main">
+                <div className="text-sm font-bold tracking-wider" style={{ color: 'var(--text-main)' }}>
                   神枢算力权益通
                 </div>
-                <div className="text-[10px] tracking-widest text-text-muted">
-                  SHENSHU POWER
+                <div className="text-[10px] tracking-widest" style={{ color: 'var(--text-muted)' }}>
+                  全国算力生态数字展厅
                 </div>
               </div>
             </div>
 
-            {/* Nav links - grouped */}
+            {/* Nav links — 展厅导航轨道 */}
             <div className="flex items-center gap-1">
               {NAV_GROUPS.map((group, gi) => (
                 <div key={group.label} className="flex items-center">
@@ -116,16 +123,15 @@ export default function MainShell({ children }: { children: ReactNode }) {
                           currentSection === item.key
                             ? {
                                 background: 'rgba(74, 184, 255, 0.12)',
-                                color: '#4ab8ff',
+                                color: 'var(--blue-core)',
                                 border: '1px solid rgba(74, 184, 255, 0.3)',
                                 boxShadow: '0 0 12px rgba(74,184,255,0.1)',
                               }
                             : {
-                                color: '#6f7f9f',
+                                color: 'var(--text-muted)',
                                 border: '1px solid transparent',
                               }
                         }
-
                       >
                         {item.label}
                       </button>
@@ -138,8 +144,55 @@ export default function MainShell({ children }: { children: ReactNode }) {
               ))}
             </div>
 
-            {/* Actions */}
+            {/* Actions — 模式切换 + 一键讲解 */}
             <div className="flex items-center gap-3 flex-shrink-0">
+              {/* 客户 / 讲解人模式切换 */}
+              <div
+                className="flex items-center rounded-full px-1 py-1"
+                style={{
+                  background: 'var(--bg-panel)',
+                  border: '1px solid rgba(126, 190, 255, 0.12)',
+                }}
+              >
+                <button
+                  onClick={() => setExhibitionMode('client')}
+                  className="px-3 py-1 rounded-full text-[11px] transition-all"
+                  style={
+                    exhibitionMode === 'client'
+                      ? {
+                          background: 'rgba(74, 184, 255, 0.12)',
+                          color: 'var(--blue-core)',
+                          border: '1px solid rgba(74, 184, 255, 0.3)',
+                        }
+                      : {
+                          color: 'var(--text-muted)',
+                          border: '1px solid transparent',
+                        }
+                  }
+                >
+                  客户演示
+                </button>
+                <button
+                  onClick={() => setExhibitionMode('presenter')}
+                  className="px-3 py-1 rounded-full text-[11px] transition-all"
+                  style={
+                    exhibitionMode === 'presenter'
+                      ? {
+                          background: 'rgba(246, 201, 107, 0.12)',
+                          color: 'var(--gold-core)',
+                          border: '1px solid rgba(246, 201, 107, 0.3)',
+                        }
+                      : {
+                          color: 'var(--text-muted)',
+                          border: '1px solid transparent',
+                        }
+                  }
+                >
+                  讲解人
+                </button>
+              </div>
+
+              {/* 一键讲解 */}
               <button
                 onClick={() => setPresentationMode(!isPresentationMode)}
                 className={`px-4 py-2 rounded-lg text-xs border transition-all ${isPresentationMode ? '' : 'hover:text-accent-gold hover:border-accent-gold/25'}`}
@@ -147,17 +200,16 @@ export default function MainShell({ children }: { children: ReactNode }) {
                   isPresentationMode
                     ? {
                         background: 'rgba(246, 201, 107, 0.12)',
-                        color: '#f6c96b',
+                        color: 'var(--gold-core)',
                         borderColor: 'rgba(246, 201, 107, 0.35)',
                         boxShadow: '0 0 12px rgba(246,201,107,0.1)',
                       }
                     : {
                         background: 'rgba(15, 25, 48, 0.5)',
-                        color: '#6f7f9f',
+                        color: 'var(--text-muted)',
                         borderColor: 'var(--border-light)',
                       }
                 }
-
               >
                 {isPresentationMode ? '退出讲解' : '一键讲解'}
               </button>
@@ -166,25 +218,27 @@ export default function MainShell({ children }: { children: ReactNode }) {
         )}
       </AnimatePresence>
 
-      {/* Bottom status bar */}
+      {/* Bottom status bar — V2.0 */}
       {showNav && (
         <div
           className="absolute bottom-0 left-0 right-0 z-40 flex items-center justify-between px-8 py-2.5 border-t"
           style={{
-            background: 'rgba(2, 4, 10, 0.7)',
+            background: 'rgba(3, 5, 10, 0.7)',
             backdropFilter: 'blur(12px) saturate(140%)',
             borderColor: 'rgba(126, 190, 255, 0.08)',
           }}
         >
-          <div className="flex items-center gap-6 text-[10px] text-text-muted">
+          <div className="flex items-center gap-6 text-[10px]" style={{ color: 'var(--text-muted)' }}>
             <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-              系统运行中
+              <span className="w-1.5 h-1.5 rounded-full animate-pulse"
+                style={{ background: 'var(--cyan-flow)' }}
+              />
+              展厅运行中
             </span>
-            <span>全国算力生态数字展厅 V1.3</span>
-            <span>离线演示模式</span>
+            <span>神枢全国算力生态数字展厅 V2.0</span>
+            <span>{exhibitionMode === 'client' ? '客户演示模式' : '讲解人模式'}</span>
           </div>
-          <div className="text-[10px] text-text-muted">
+          <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
             {new Date().toLocaleDateString('zh-CN')} | 神枢算力权益通
           </div>
         </div>

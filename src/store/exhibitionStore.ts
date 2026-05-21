@@ -44,6 +44,8 @@ export type ViewerIdentity =
   | 'agent'
   | 'cofounder_viewer'
 
+export type ExhibitionMode = 'client' | 'presenter'
+
 export interface ExhibitionState {
   // Navigation
   currentSection: ExhibitionSection
@@ -94,6 +96,12 @@ export interface ExhibitionState {
   setPresentationStep: (step: number) => void
   isPresentationPaused: boolean
   setPresentationPaused: (paused: boolean) => void
+
+  // Exhibition mode: client / presenter
+  exhibitionMode: ExhibitionMode
+  setExhibitionMode: (mode: ExhibitionMode) => void
+  showPresenterDrawer: boolean
+  setShowPresenterDrawer: (show: boolean) => void
 
   // Intro
   introComplete: boolean
@@ -165,6 +173,11 @@ export const useExhibitionStore = create<ExhibitionState>((set) => ({
   setPresentationStep: (step) => set({ presentationStep: step }),
   isPresentationPaused: false,
   setPresentationPaused: (paused) => set({ isPresentationPaused: paused }),
+
+  exhibitionMode: 'client',
+  setExhibitionMode: (mode) => set({ exhibitionMode: mode }),
+  showPresenterDrawer: false,
+  setShowPresenterDrawer: (show) => set({ showPresenterDrawer: show }),
 
   introComplete: false,
   setIntroComplete: (complete) => set({ introComplete: complete }),

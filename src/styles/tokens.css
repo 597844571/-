@@ -1,58 +1,67 @@
 /* ============================================================
    神枢算力权益通 · 全国算力生态数字展厅
-   V1.3 视觉系统 — 国家级数字算力工程展示舱
+   V2.0 视觉系统 — 结构统一升级版
    ============================================================ */
 
 :root {
-  /* === 背景层级（深空宇宙感） === */
-  --bg-deep:    #02040a;   /* 最深宇宙黑 — 用于全局根背景 */
-  --bg-space:   #0a1325;   /* 空间主背景 — 模块层背景 */
-  --bg-void:    #050a14;   /* 虚空过渡色 */
-  --bg-panel:   rgba(15, 25, 48, 0.72);   /* 标准玻璃面板 */
-  --bg-panel-strong: rgba(18, 32, 56, 0.88); /* 强玻璃面板（抽屉/弹窗） */
-  --bg-panel-weak:   rgba(10, 19, 37, 0.45); /* 弱玻璃（大面积底层） */
+  /* === V2.0 背景层级 === */
+  --bg-0: #03050A;   /* 最深空间黑 — 全局根背景 */
+  --bg-1: #07101C;   /* 空间主背景 — 模块层背景 */
+  --bg-2: #0B1424;   /* 卡片/面板底层 */
+  --bg-3: #101B2F;   /*  elevated 表面 */
 
-  /* === 核心光色 === */
-  --core-blue:     #4ab8ff;   /* 算力蓝 — 节点、网络、基础设施 */
-  --flow-cyan:     #31f4ff;   /* 数据流青 — 实时流动、传输 */
-  --glow-purple:   #8a6fff;   /* 算力紫 — AI、未来感、空间氛围 */
-  --violet-deep:   #4c35c9;   /* 深紫 — 背景氛围、阴影 */
+  /* === V2.0 兼容旧背景变量 === */
+  --bg-deep:    var(--bg-0);
+  --bg-space:   var(--bg-1);
+  --bg-void:    #050a14;
+  --bg-panel:   rgba(11, 20, 36, 0.72);
+  --bg-panel-strong: rgba(16, 27, 47, 0.88);
+  --bg-panel-weak:   rgba(7, 16, 28, 0.45);
 
-  /* 兼容旧变量 */
-  --primary-blue:    #4ab8ff;
-  --primary-cyan:    #31f4ff;
-  --primary-purple:  #8a6fff;
+  /* === V2.0 数据与算力色 === */
+  --blue-core:   #4AB8FF;
+  --cyan-flow:   #31F4FF;
+  --purple-glow: #7C5CFF;
+  --violet-deep: #4C35C9;
 
-  /* === 权益强调色（占比 <5%，仅点缀） === */
-  --accent-gold:     #f6c96b;   /* 核心金 */
-  --gold-soft:       #ffdf91;   /* 柔金 — hover/高亮 */
-  --gold-dark:       #9d7133;   /* 暗金 — 阴影/描边 */
+  /* === V2.0 兼容旧光色变量 === */
+  --core-blue:     var(--blue-core);
+  --flow-cyan:     var(--cyan-flow);
+  --glow-purple:   var(--purple-glow);
 
-  /* === 文本色 === */
-  --text-main:       #f0f4ff;   /* 主标题 — 极亮 */
-  --text-sub:        #b0c4e8;   /* 副标题/正文 — 柔和蓝白 */
-  --text-muted:      #6f7f9f;   /* 辅助说明 — 低调灰蓝 */
-  --text-gold:       #f6c96b;   /* 权益文本 */
+  /* === V2.0 权益与收益色 === */
+  --gold-core:  #F6C96B;
+  --gold-soft:  #FFDF91;
+  --gold-dark:  #9D7133;
 
-  /* 兼容旧变量 */
-  --text-secondary:  #b0c4e8;
+  /* === V2.0 兼容旧金色变量 === */
+  --accent-gold:  var(--gold-core);
+
+  /* === V2.0 文本色 === */
+  --text-main:   #F4F7FF;
+  --text-sub:    #AAB8D8;
+  --text-muted:  #6F7F9F;
+  --text-gold:   #F6C96B;
+
+  /* === 兼容旧文本变量 === */
+  --text-secondary: var(--text-sub);
 
   /* === 边框 === */
-  --border-light:    rgba(126, 190, 255, 0.18);  /* 标准微光边框 */
-  --border-medium:   rgba(126, 190, 255, 0.30);  /* 强调边框 */
-  --border-gold:     rgba(246, 201, 107, 0.30);  /* 权益边框 */
-  --border-purple:   rgba(138, 111, 255, 0.25);  /* 未来感边框 */
+  --border-light:    rgba(126, 190, 255, 0.18);
+  --border-medium:   rgba(126, 190, 255, 0.30);
+  --border-gold:     rgba(246, 201, 107, 0.30);
+  --border-purple:   rgba(138, 111, 255, 0.25);
 
   /* === 发光晕 === */
-  --glow-blue:       rgba(74, 184, 255, 0.45);
-  --glow-cyan:       rgba(49, 244, 255, 0.40);
-  --glow-purple:     rgba(138, 111, 255, 0.40);
-  --glow-gold:       rgba(246, 201, 107, 0.42);
+  --glow-blue:    rgba(74, 184, 255, 0.45);
+  --glow-cyan:    rgba(49, 244, 255, 0.40);
+  --glow-purple:  rgba(124, 92, 255, 0.40);
+  --glow-gold:    rgba(246, 201, 107, 0.42);
 
   /* === 阴影深度 === */
   --shadow-sm:   0 4px 16px rgba(0, 0, 0, 0.35);
   --shadow-md:   0 8px 32px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255,255,255,0.04);
   --shadow-lg:   0 16px 48px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255,255,255,0.05);
-  --shadow-glow-blue:  0 0 24px rgba(74, 184, 255, 0.25), 0 0 60px rgba(74, 184, 255, 0.08);
-  --shadow-glow-purple: 0 0 24px rgba(138, 111, 255, 0.25), 0 0 60px rgba(138, 111, 255, 0.08);
+  --shadow-glow-blue:   0 0 24px rgba(74, 184, 255, 0.25), 0 0 60px rgba(74, 184, 255, 0.08);
+  --shadow-glow-purple: 0 0 24px rgba(124, 92, 255, 0.25), 0 0 60px rgba(124, 92, 255, 0.08);
 }
