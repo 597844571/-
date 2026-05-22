@@ -60,24 +60,24 @@ export default function RoadshowDeck({ open, onClose }: Props) {
   return (
     <AnimatePresence>
       {open && (
-        <>
-          {/* 背景遮罩 */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[90]"
-            style={{ background: 'rgba(3, 5, 10, 0.5)' }}
-            onClick={onClose}
-          />
-
-          {/* 抽屉 */}
-          <motion.div
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed top-0 right-0 bottom-0 z-[95] w-[480px] flex flex-col"
+        <motion.div
+          key="roadshow-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[90]"
+          style={{ background: 'rgba(3, 5, 10, 0.5)' }}
+          onClick={onClose}
+        />
+      )}
+      {open && (
+        <motion.div
+          key="roadshow-drawer"
+          initial={{ x: '100%' }}
+          animate={{ x: 0 }}
+          exit={{ x: '100%' }}
+          transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+          className="fixed top-0 right-0 bottom-0 z-[95] w-[480px] flex flex-col"
             style={{
               background: 'linear-gradient(180deg, rgba(11, 20, 36, 0.98), rgba(7, 16, 28, 0.98))',
               borderLeft: '1px solid rgba(126, 190, 255, 0.12)',
@@ -313,28 +313,27 @@ export default function RoadshowDeck({ open, onClose }: Props) {
                 </button>
               </div>
             </div>
-          </motion.div>
 
-          {/* 保存成功提示 */}
-          <AnimatePresence>
-            {savedToast && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[100] px-4 py-2 rounded-lg text-sm"
-                style={{
-                  background: 'rgba(74, 184, 255, 0.15)',
-                  color: 'var(--blue-core)',
-                  border: '1px solid rgba(74, 184, 255, 0.3)',
-                }}
-              >
-                方案已保存，展示结果已刷新
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </>
-      )}
+            {/* 保存成功提示 */}
+            <AnimatePresence>
+              {savedToast && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[100] px-4 py-2 rounded-lg text-sm"
+                  style={{
+                    background: 'rgba(74, 184, 255, 0.15)',
+                    color: 'var(--blue-core)',
+                    border: '1px solid rgba(74, 184, 255, 0.3)',
+                  }}
+                >
+                  方案已保存，展示结果已刷新
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        )}
     </AnimatePresence>
   )
 }
