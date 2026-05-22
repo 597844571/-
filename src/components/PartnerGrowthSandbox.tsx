@@ -27,13 +27,20 @@ function MetricValue({ value, prefix = '', suffix = '' }: { value: number; prefi
   )
 }
 
-/** 收益铭牌卡片 */
+/** 身份系数映射 */
+const IDENTITY_MULTIPLIERS: Record<string, number> = {
+  member: 1, team_leader: 1.5, partner_10000: 2,
+  partner_30000: 3, partner_50000: 4, cofounder: 6, regional_agent: 8,
+}
+
+/** 收益铭牌卡片 — 带计算过程展示 */
 function RevenueBadge({
   title,
   value,
   prefix = '',
   suffix = '',
   source,
+  formula,
   delay,
 }: {
   title: string
@@ -41,6 +48,7 @@ function RevenueBadge({
   prefix?: string
   suffix?: string
   source: string
+  formula?: string
   delay: number
 }) {
   return (
@@ -54,11 +62,14 @@ function RevenueBadge({
         border: '1px solid rgba(126, 190, 255, 0.1)',
       }}
     >
-      <div className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>
-        {title}
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{title}</span>
+        {formula && (
+          <span className="text-[11px]" style={{ color: 'var(--text-sub)' }}>{formula}</span>
+        )}
       </div>
       <MetricValue value={value} prefix={prefix} suffix={suffix} />
-      <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+      <div className="text-[11px] mt-1.5" style={{ color: 'var(--text-muted)' }}>
         {source}
       </div>
     </motion.div>
@@ -165,7 +176,7 @@ function GrowthTrack({ track, months }: { track: GrowthResult['monthlyTrack']; m
 
 /** 增长轨道面板 — 可折叠 */
 function GrowthTrackPanel({ track, months }: { track: GrowthResult['monthlyTrack']; months: number }) {
-  const [expanded, setExpanded] = useState(false)
+  const [expanded, setExpanded] = useState(true)
   const data = track.slice(0, months)
   const finalValue = data[data.length - 1]?.equityShare ?? 0
 
@@ -336,6 +347,18 @@ export default function PartnerGrowthSandbox() {
   const result = useMemo(() => calculateGrowth(scenario), [scenario])
 
   const identityLabel = IDENTITY_LABELS[scenario.identity] ?? '普通会员'
+
+  // 中间计算变量（供公式可视化使用）
+  const multiplier = IDENTITY_MULTIPLIERS[scenario.identity] ?? 1
+  const months = result.monthlyTrack.length
+
+  const productFormula = `${scenario.personalInvestment.toLocaleString()} × 30% × ${multiplier}`
+  const dataFormula = `${scenario.personalInvestment.toLocaleString()} × 50% × ${multiplier}`
+  const tradableFormula = `${scenario.personalInvestment.toLocaleString()} × 50% × ${multiplier} × 40%`
+  const referralFormula = `${scenario.invitedCustomers}人 × ¥${scenario.averageCustomerInvestment.toLocaleString()} × ${(scenario.conversionRate * 100).toFixed(0)}%`
+  const trackLast = result.monthlyTrack[months - 1] || { cumulativeInvestment: 0 }
+  const growthFormula = `第${months}月团队累计 ¥${Math.round(trackLast.cumulativeInvestment).toLocaleString()}`
+  const shareFormula = `年化团队业绩 × 系数${multiplier}`
 
   // 点击身份阶梯切换默认方案
   const handleIdentityClick = (identity: PartnerIdentity) => {
@@ -539,8 +562,14 @@ export default function PartnerGrowthSandbox() {
           </div>
         </div>
 
-        {/* 右侧：收益铭牌 */}
-        <div className="col-span-4 flex flex-col gap-3 overflow-y-auto pr-1 scrollbar-thin h-full">
+        {/* 右侧：收益铭牌（key 强制 remount，切身份时整体重播入场动画） */}
+        <motion.div
+          key={scenario.identity}
+          initial={{ opacity: 0, x: 30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="col-span-4 flex flex-col gap-3 overflow-y-auto pr-1 scrollbar-thin h-full"
+        >
           <h3 className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
             收益铭牌
           </h3>
@@ -548,23 +577,23 @@ export default function PartnerGrowthSandbox() {
           <div className="text-xs font-medium" style={{ color: 'var(--text-sub)' }}>
             我的基础权益
           </div>
-          <RevenueBadge title="产品礼包" value={result.productGiftValue} prefix="¥" source="投入金额 × 30% × 身份系数" delay={0} />
-          <RevenueBadge title="数据资产奖励" value={result.dataAssetReward} prefix="¥" source="投入金额 × 50% × 身份系数" delay={0.05} />
-          <RevenueBadge title="可流通资产" value={result.tradableAsset} prefix="¥" source="数据资产的 40%" delay={0.1} />
+          <RevenueBadge title="产品礼包" value={result.productGiftValue} prefix="¥" source="投入金额 × 30% × 身份系数" formula={productFormula} delay={0} />
+          <RevenueBadge title="数据资产奖励" value={result.dataAssetReward} prefix="¥" source="投入金额 × 50% × 身份系数" formula={dataFormula} delay={0.05} />
+          <RevenueBadge title="可流通资产" value={result.tradableAsset} prefix="¥" source="数据资产的 40%" formula={tradableFormula} delay={0.1} />
 
           <div className="text-xs font-medium mt-1" style={{ color: 'var(--text-sub)' }}>
             我的增长权益（{scenario.projectionMonths}个月累计）
           </div>
-          <RevenueBadge title="推荐奖励" value={result.referralReward} prefix="¥" source="团队投入 × 5% × 身份系数" delay={0.15} />
-          <RevenueBadge title="团队补贴" value={result.teamSubsidy} prefix="¥" source="团队投入 × 3% × 身份系数" delay={0.2} />
-          <RevenueBadge title="阶梯业绩奖励" value={result.tierBonus} prefix="¥" source="团队投入 × 2% × 时间系数" delay={0.25} />
+          <RevenueBadge title="推荐奖励" value={result.referralReward} prefix="¥" source="团队投入 × 5% × 身份系数" formula={referralFormula} delay={0.15} />
+          <RevenueBadge title="团队补贴" value={result.teamSubsidy} prefix="¥" source="团队投入 × 3% × 身份系数" formula={growthFormula} delay={0.2} />
+          <RevenueBadge title="阶梯业绩奖励" value={result.tierBonus} prefix="¥" source="团队投入 × 2% × 时间系数" formula={growthFormula} delay={0.25} />
 
           <div className="text-xs font-medium mt-1" style={{ color: 'var(--text-sub)' }}>
             我的分成权益（月度）
           </div>
-          <RevenueBadge title="全网销售额分成" value={result.globalSalesShare} prefix="¥" source="权益份额 × 20%" delay={0.3} />
-          <RevenueBadge title="算力收益分成" value={result.computeIncomeShare} prefix="¥" source="权益份额 × 15%" delay={0.35} />
-          <RevenueBadge title="区域销售额分成" value={result.regionalSalesShare} prefix="¥" source="权益份额 × 25%" delay={0.4} />
+          <RevenueBadge title="全网销售额分成" value={result.globalSalesShare} prefix="¥" source="权益份额 × 20%" formula={shareFormula} delay={0.3} />
+          <RevenueBadge title="算力收益分成" value={result.computeIncomeShare} prefix="¥" source="权益份额 × 15%" formula={shareFormula} delay={0.35} />
+          <RevenueBadge title="区域销售额分成" value={result.regionalSalesShare} prefix="¥" source="权益份额 × 25%" formula={shareFormula} delay={0.4} />
 
           {/* 汇总 */}
           <div
@@ -591,7 +620,7 @@ export default function PartnerGrowthSandbox() {
               </span>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* 底部：增长轨道（可折叠） */}
