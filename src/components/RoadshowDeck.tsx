@@ -24,6 +24,7 @@ export default function RoadshowDeck({ open, onClose }: Props) {
   const { setCurrentScenario } = useExhibitionStore()
   const [scenario, setScenario] = useState<PartnerGrowthScenario>(DEFAULT_SCENARIO)
   const [savedToast, setSavedToast] = useState(false)
+  const [livePreview, setLivePreview] = useState(true)
 
   // 加载当前有效方案
   useEffect(() => {
@@ -36,13 +37,17 @@ export default function RoadshowDeck({ open, onClose }: Props) {
     key: K,
     value: PartnerGrowthScenario[K]
   ) => {
-    setScenario((prev) => ({ ...prev, [key]: value }))
+    setScenario((prev) => {
+      const next = { ...prev, [key]: value }
+      if (livePreview) {
+        setCurrentScenario(next)
+      }
+      return next
+    })
   }
 
   const handleStart = () => {
-    // 保存到 localStorage
     saveScenario(scenario)
-    // 实时同步到主画面
     setCurrentScenario(scenario)
     setSavedToast(true)
     setTimeout(() => setSavedToast(false), 2000)
@@ -93,7 +98,7 @@ export default function RoadshowDeck({ open, onClose }: Props) {
                   路演推演参数
                 </h2>
                 <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                  调整当前增长场景，保存后将刷新展示结果
+                  调整当前增长场景{livePreview ? '，沙盘实时预览' : '，保存后刷新结果'}
                 </p>
               </div>
               <button
@@ -286,7 +291,7 @@ export default function RoadshowDeck({ open, onClose }: Props) {
                   border: '1px solid rgba(74, 184, 255, 0.35)',
                 }}
               >
-                开始推演
+                {livePreview ? '保存方案并关闭' : '开始推演'}
               </button>
               <div className="flex gap-2">
                 <button
@@ -312,6 +317,19 @@ export default function RoadshowDeck({ open, onClose }: Props) {
                   取消
                 </button>
               </div>
+              <label className="flex items-center justify-center gap-2 py-1 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={livePreview}
+                  onChange={(e) => {
+                    setLivePreview(e.target.checked)
+                    if (e.target.checked) setCurrentScenario(scenario)
+                  }}
+                  className="w-3.5 h-3.5 rounded"
+                  style={{ accentColor: '#4AB8FF' }}
+                />
+                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>实时预览（调整时沙盘即时更新）</span>
+              </label>
             </div>
 
             {/* 保存成功提示 */}

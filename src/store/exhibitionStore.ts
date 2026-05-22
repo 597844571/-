@@ -104,6 +104,10 @@ export interface ExhibitionState {
   currentScenario: PartnerGrowthScenario | null
   setCurrentScenario: (scenario: PartnerGrowthScenario | null) => void
 
+  // 沙盘全屏路演模式（隐藏导航栏和状态栏）
+  sandboxFullscreen: boolean
+  setSandboxFullscreen: (active: boolean) => void
+
   // Intro
   introComplete: boolean
   setIntroComplete: (complete: boolean) => void
@@ -180,6 +184,9 @@ export const useExhibitionStore = create<ExhibitionState>((set) => ({
 
   currentScenario: null,
   setCurrentScenario: (scenario) => set({ currentScenario: scenario }),
+
+  sandboxFullscreen: false,
+  setSandboxFullscreen: (active) => set({ sandboxFullscreen: active }),
 
   introComplete: false,
   setIntroComplete: (complete) => set({ introComplete: complete }),

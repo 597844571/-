@@ -53,9 +53,10 @@ export default function MainShell({ children }: { children: ReactNode }) {
     isPresentationMode,
     setPresentationMode,
     setShowRoadshowDeck,
+    sandboxFullscreen,
   } = useExhibitionStore()
 
-  const showNav = currentSection !== 'intro'
+  const showNav = currentSection !== 'intro' && !sandboxFullscreen
 
   return (
     <div className="relative w-full h-full">
@@ -183,7 +184,7 @@ export default function MainShell({ children }: { children: ReactNode }) {
       </AnimatePresence>
 
       {/* Bottom status bar — V2.0 */}
-      {showNav && (
+      {showNav && !sandboxFullscreen && (
         <div
           className="absolute bottom-0 left-0 right-0 z-40 flex items-center justify-between px-8 py-2.5 border-t"
           style={{

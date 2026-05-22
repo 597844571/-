@@ -228,6 +228,17 @@ function EquityStarCore({ result, playingStep }: { result: GrowthResult; playing
     { label: '每日释放', value: result.dailyReleaseMax, color: C.poolPurple, angle: 180 },
   ]
 
+  // 圆环间距映射数值比例：数值越大，圆环越靠外
+  const values = rings.map((r) => r.value)
+  const minVal = Math.min(...values)
+  const maxVal = Math.max(...values)
+  const minSize = 58
+  const maxSize = 112
+  const getSize = (v: number) => {
+    if (maxVal === minVal) return (minSize + maxSize) / 2
+    return minSize + ((v - minVal) / (maxVal - minVal)) * (maxSize - minSize)
+  }
+
   return (
     <div className="relative w-full h-full flex items-center justify-center">
       {/* 分成光路 */}
@@ -243,7 +254,7 @@ function EquityStarCore({ result, playingStep }: { result: GrowthResult; playing
 
       {/* 数据层 */}
       {rings.map((ring, i) => {
-        const size = 72 + i * 14
+        const size = getSize(ring.value)
         const delay = rv ? i * 0.1 : 0
         const spinDir = i % 2 === 0 ? '' : 'reverse'
         const spinDur = 9 + i * 3
@@ -719,7 +730,7 @@ function AssumptionBadge({ scenario }: { scenario: PartnerGrowthScenario }) {
 // ════════════════════════════════════════════════════════════
 
 export default function PartnerGrowthSandbox() {
-  const { currentScenario, setCurrentScenario, setShowRoadshowDeck } = useExhibitionStore()
+  const { currentScenario, setCurrentScenario, setShowRoadshowDeck, sandboxFullscreen, setSandboxFullscreen } = useExhibitionStore()
   const scenario = currentScenario ?? loadEffectiveScenario()
   const result = useMemo(() => calculateGrowth(scenario), [scenario])
 
@@ -768,11 +779,16 @@ export default function PartnerGrowthSandbox() {
         case 'R':
           setShowRoadshowDeck(true)
           break
+        case 'f':
+        case 'F':
+          e.preventDefault()
+          setSandboxFullscreen(!sandboxFullscreen)
+          break
       }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [scenario.identity, isPlaying])
+  }, [scenario.identity, isPlaying, sandboxFullscreen])
 
   const handlePlay = useCallback(() => {
     if (isPlaying) return
@@ -826,6 +842,21 @@ export default function PartnerGrowthSandbox() {
             style={{ background: 'rgba(8, 14, 28, 0.45)', color: C.textMuted, border: '1px solid rgba(126, 190, 255, 0.08)' }}>
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
             路演参数
+          </button>
+          <button
+            onClick={() => setSandboxFullscreen(!sandboxFullscreen)}
+            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] transition-all hover:brightness-110"
+            style={{ background: sandboxFullscreen ? 'rgba(74,184,255,0.12)' : 'rgba(8, 14, 28, 0.45)', color: sandboxFullscreen ? C.dataBlue : C.textMuted, border: `1px solid ${sandboxFullscreen ? 'rgba(74,184,255,0.25)' : 'rgba(126, 190, 255, 0.08)'}` }}
+            title="F键切换"
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              {sandboxFullscreen ? (
+                <><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></>
+              ) : (
+                <><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></>
+              )}
+            </svg>
+            {sandboxFullscreen ? '退出全屏' : '全屏'}
           </button>
         </div>
       </div>
