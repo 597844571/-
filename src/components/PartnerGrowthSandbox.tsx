@@ -9,7 +9,8 @@ import type { GrowthResult, MonthlyData } from '../utils/growthCalculation'
 import type { PartnerIdentity, PartnerGrowthScenario } from '../data/roadshowPreset'
 
 /* ============================================================
-   V3.3 合伙权益增长沙盘 — ResizeObserver 自适应 · Flex 全比例
+   V3.4 合伙权益增长沙盘
+   权益积累舱 · 阶段指示器 · 数字滚动 · 自适应布局
    ============================================================ */
 
 const C = {
@@ -44,8 +45,19 @@ const IDENTITY_META: Record<PartnerIdentity, { threshold: string; unlocks: strin
   regional_agent: { threshold: '投入 ¥1,000,000', unlocks: ['区域代理权', '最高分成'] },
 }
 
+const PLAYBACK_STAGES = [
+  { step: 1, label: '身份', color: C.dataBlue },
+  { step: 2, label: '投入', color: C.equityGold },
+  { step: 3, label: '资产', color: C.flowCyan },
+  { step: 4, label: '团队', color: C.poolPurple },
+  { step: 5, label: '增长池', color: C.poolPurple },
+  { step: 6, label: '分成', color: C.equityGold },
+  { step: 7, label: '结果', color: C.equityGold },
+  { step: 8, label: '轨道', color: C.dataBlue },
+]
+
 function fmtMoney(v: number) {
-  if (v >= 100000000) return `${(v / 100000000).toFixed(1)}亿`
+  if (v >= 100000000) return `${(v / 100000000).toFixed(2)}亿`
   if (v >= 1000000) return `${(v / 1000000).toFixed(1)}M`
   if (v >= 10000) return `${(v / 10000).toFixed(1)}万`
   return v.toLocaleString()
@@ -56,8 +68,76 @@ function fmtRoi(v: number) {
   return `${v}%`
 }
 
+// ── 数字滚动动画 Hook ──
+function useAnimatedNumber(target: number, duration = 700, trigger: boolean) {
+  const [display, setDisplay] = useState(0)
+  const startRef = useRef(0)
+  const targetRef = useRef(target)
+
+  useEffect(() => {
+    if (!trigger) { setDisplay(0); return }
+    targetRef.current = target
+    startRef.current = 0
+    const startTime = performance.now()
+    const animate = (now: number) => {
+      const elapsed = now - startTime
+      const progress = Math.min(elapsed / duration, 1)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      const current = Math.round(startRef.current + (targetRef.current - startRef.current) * eased)
+      setDisplay(current)
+      if (progress < 1) requestAnimationFrame(animate)
+    }
+    requestAnimationFrame(animate)
+  }, [trigger, target, duration])
+
+  return trigger ? display : 0
+}
+
 // ════════════════════════════════════════════════════════════
-// 1. 左侧：身份升阶轨道
+// 1. 推演阶段指示器
+// ════════════════════════════════════════════════════════════
+
+function PlaybackStageIndicator({ step, isPlaying }: { step: number; isPlaying: boolean }) {
+  return (
+    <div className="flex items-center justify-center gap-1 px-4">
+      {PLAYBACK_STAGES.map((s, i) => {
+        const done = step > s.step
+        const current = step === s.step
+        return (
+          <div key={s.step} className="flex items-center gap-1">
+            {/* 节点 */}
+            <div className="relative flex flex-col items-center">
+              <div
+                className="w-1.5 h-1.5 rounded-full transition-all duration-300"
+                style={{
+                  background: done || current ? s.color : 'rgba(111,127,159,0.15)',
+                  boxShadow: current ? `0 0 6px ${s.color}` : 'none',
+                  transform: current ? 'scale(1.4)' : 'scale(1)',
+                }}
+              />
+              {current && isPlaying && (
+                <div className="absolute w-3 h-3 rounded-full animate-ping" style={{ background: `${s.color}30` }} />
+              )}
+              <span
+                className="text-[8px] mt-0.5 transition-colors duration-300"
+                style={{ color: done || current ? s.color : 'rgba(111,127,159,0.25)' }}
+              >
+                {s.label}
+              </span>
+            </div>
+            {/* 连接线 */}
+            {i < PLAYBACK_STAGES.length - 1 && (
+              <div className="w-3 h-px mb-2.5" style={{ background: step > s.step ? `linear-gradient(to right, ${s.color}40, ${PLAYBACK_STAGES[i + 1].color}20)` : 'rgba(111,127,159,0.06)' }} />
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ════════════════════════════════════════════════════════════
+// 2. 左侧身份升阶轨道
 // ════════════════════════════════════════════════════════════
 
 function IdentityOrbit({ currentIdentity, onSelect }: { currentIdentity: PartnerIdentity; onSelect: (id: PartnerIdentity) => void }) {
@@ -134,7 +214,7 @@ function IdentityOrbit({ currentIdentity, onSelect }: { currentIdentity: Partner
 }
 
 // ════════════════════════════════════════════════════════════
-// 2. 中央：合伙权益星核（角度分布标签）
+// 3. 中央权益星核
 // ════════════════════════════════════════════════════════════
 
 function EquityStarCore({ result, playingStep }: { result: GrowthResult; playingStep: number }) {
@@ -207,7 +287,7 @@ function EquityStarCore({ result, playingStep }: { result: GrowthResult; playing
 }
 
 // ════════════════════════════════════════════════════════════
-// 3. 团队增长网络
+// 4. 团队增长网络
 // ════════════════════════════════════════════════════════════
 
 function TeamNetwork({ scenario, playingStep }: { scenario: PartnerGrowthScenario; playingStep: number }) {
@@ -218,9 +298,11 @@ function TeamNetwork({ scenario, playingStep }: { scenario: PartnerGrowthScenari
       const angle = (i / count) * Math.PI * 2 + Math.random() * 0.3
       const radius = 50 + (i / count) * 70
       const investment = scenario.averageCustomerInvestment * (0.6 + Math.random() * 0.8)
-      const size = investment > scenario.averageCustomerInvestment * 1.2 ? 4.5 : investment > scenario.averageCustomerInvestment * 0.8 ? 3 : 2
-      const color = investment > scenario.averageCustomerInvestment * 1.2 ? C.equityGold : investment > scenario.averageCustomerInvestment * 0.8 ? C.poolPurple : C.dataBlue
-      return { x: 150 + Math.cos(angle) * radius, y: 120 + Math.sin(angle) * radius, size, color, investment: Math.round(investment) }
+      const isVip = investment > scenario.averageCustomerInvestment * 1.2
+      const isMid = investment > scenario.averageCustomerInvestment * 0.8
+      const size = isVip ? 4.5 : isMid ? 3 : 2
+      const color = isVip ? C.equityGold : isMid ? C.poolPurple : C.dataBlue
+      return { x: 150 + Math.cos(angle) * radius, y: 120 + Math.sin(angle) * radius, size, color, investment: Math.round(investment), isVip, isMid }
     })
   }, [scenario.invitedCustomers, scenario.averageCustomerInvestment])
 
@@ -228,8 +310,8 @@ function TeamNetwork({ scenario, playingStep }: { scenario: PartnerGrowthScenari
   return (
     <div className="relative w-full h-full">
       <svg viewBox="0 0 300 240" className="w-full h-full">
-        <defs><radialGradient id="nwGlow3" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="rgba(74,184,255,0.05)" /><stop offset="100%" stopColor="transparent" /></radialGradient></defs>
-        <circle cx={cx} cy={cy} r="130" fill="url(#nwGlow3)" />
+        <defs><radialGradient id="nwGlow4" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="rgba(74,184,255,0.05)" /><stop offset="100%" stopColor="transparent" /></radialGradient></defs>
+        <circle cx={cx} cy={cy} r="130" fill="url(#nwGlow4)" />
         {nodes.map((n, i) => <motion.line key={`l-${i}`} initial={{ opacity: 0 }} animate={{ opacity: visible ? 0.08 : 0 }} transition={{ delay: i * 0.02 }} x1={cx} y1={cy} x2={n.x} y2={n.y} stroke={n.color} strokeWidth="0.5" />)}
         {nodes.map((n, i) => nodes.slice(i + 1).map((m, j) => { const dist = Math.hypot(n.x - m.x, n.y - m.y); if (dist > 65) return null; return <motion.line key={`c-${i}-${j}`} initial={{ opacity: 0 }} animate={{ opacity: visible ? 0.04 : 0 }} transition={{ delay: 0.2 + i * 0.012 }} x1={n.x} y1={n.y} x2={m.x} y2={m.y} stroke={C.dataBlue} strokeWidth="0.4" /> }))}
         <motion.circle cx={cx} cy={cy} r="130" fill="none" stroke="rgba(74,184,255,0.04)" strokeWidth="1" strokeDasharray="3 6" initial={{ opacity: 0 }} animate={{ opacity: visible ? 1 : 0 }} transition={{ duration: 0.6 }} />
@@ -240,8 +322,22 @@ function TeamNetwork({ scenario, playingStep }: { scenario: PartnerGrowthScenari
         {nodes.map((n, i) => (
           <motion.g key={`n-${i}`} initial={{ opacity: 0, scale: 0 }} animate={{ opacity: visible ? 1 : 0, scale: visible ? 1 : 0 }} transition={{ delay: 0.1 + i * 0.03, duration: 0.2 }}>
             <title>投入 ¥{n.investment.toLocaleString()}</title>
-            <circle cx={n.x} cy={n.y} r={n.size + 2.5} fill={n.color} opacity="0.1"><animate attributeName="r" values={`${n.size + 2.5};${n.size + 5};${n.size + 2.5}`} dur={`${2.5 + Math.random() * 2}s`} repeatCount="indefinite" /></circle>
-            <circle cx={n.x} cy={n.y} r={n.size} fill={n.color} />
+            {/* VIP 菱形 */}
+            {n.isVip ? (
+              <>
+                <polygon points={`${n.x},${n.y - n.size - 3} ${n.x + n.size + 3},${n.y} ${n.x},${n.y + n.size + 3} ${n.x - n.size - 3},${n.y}`} fill={n.color} opacity="0.12">
+                  <animate attributeName="points" values={`${n.x},${n.y - n.size - 3} ${n.x + n.size + 3},${n.y} ${n.x},${n.y + n.size + 3} ${n.x - n.size - 3},${n.y};${n.x},${n.y - n.size - 5} ${n.x + n.size + 5},${n.y} ${n.x},${n.y + n.size + 5} ${n.x - n.size - 5},${n.y};${n.x},${n.y - n.size - 3} ${n.x + n.size + 3},${n.y} ${n.x},${n.y + n.size + 3} ${n.x - n.size - 3},${n.y}`} dur={`${2.5 + Math.random() * 2}s`} repeatCount="indefinite" />
+                </polygon>
+                <polygon points={`${n.x},${n.y - n.size} ${n.x + n.size},${n.y} ${n.x},${n.y + n.size} ${n.x - n.size},${n.y}`} fill={n.color} />
+              </>
+            ) : (
+              <>
+                <circle cx={n.x} cy={n.y} r={n.size + 2.5} fill={n.color} opacity="0.1">
+                  <animate attributeName="r" values={`${n.size + 2.5};${n.size + 5};${n.size + 2.5}`} dur={`${2.5 + Math.random() * 2}s`} repeatCount="indefinite" />
+                </circle>
+                <circle cx={n.x} cy={n.y} r={n.size} fill={n.color} />
+              </>
+            )}
           </motion.g>
         ))}
       </svg>
@@ -250,7 +346,7 @@ function TeamNetwork({ scenario, playingStep }: { scenario: PartnerGrowthScenari
 }
 
 // ════════════════════════════════════════════════════════════
-// 4. 增长池引擎舱
+// 5. 增长池引擎舱
 // ════════════════════════════════════════════════════════════
 
 function GrowthPoolEngine({ result, playingStep }: { result: GrowthResult; playingStep: number }) {
@@ -294,53 +390,185 @@ function GrowthPoolEngine({ result, playingStep }: { result: GrowthResult; playi
 }
 
 // ════════════════════════════════════════════════════════════
-// 5. 右侧收益总控台
+// 6. 权益积累舱（存钱罐式可视化）
 // ════════════════════════════════════════════════════════════
 
-function RevenueDashboard({ result, scenario, playingStep }: { result: GrowthResult; scenario: PartnerGrowthScenario; playingStep: number }) {
-  const [expanded, setExpanded] = useState<string | null>(null)
+function EquityAccumulationTank({
+  result,
+  scenario,
+  playbackMonth,
+  playingStep,
+}: {
+  result: GrowthResult
+  scenario: PartnerGrowthScenario
+  playbackMonth: number
+  playingStep: number
+}) {
   const totalAsset = scenario.projectionMonths === 36 ? result.totalAsset36M : result.totalAsset12M
-  const roi = scenario.projectionMonths === 36 ? result.roi36M : result.roi12M
+  const months = scenario.projectionMonths
+
+  // 液体填充比例
+  const fillPercent = useMemo(() => {
+    if (playingStep === 0) return 0
+    if (playingStep >= 7) {
+      // 结果出现后，按 playbackMonth 填充
+      return Math.min((playbackMonth / months) * 100, 100)
+    }
+    return Math.min(((playingStep - 1) / 7) * 30, 30) // 播放中先预填充一点
+  }, [playingStep, playbackMonth, months])
+
+  // 关键刻度
+  const milestones = [3, 6, 12, 18, 24, 36].filter((m) => m <= months)
+
+  return (
+    <div className="relative w-full rounded-xl p-2.5" style={{ background: 'rgba(8, 14, 28, 0.35)', border: '1px solid rgba(74, 184, 255, 0.06)' }}>
+      <div className="flex items-center justify-between mb-1.5">
+        <div className="flex items-center gap-1.5">
+          <div className="w-0.5 h-2 rounded-full" style={{ background: C.equityGold }} />
+          <span className="text-[9px] tracking-wider" style={{ color: C.textMuted }}>权益积累舱</span>
+        </div>
+        <span className="text-[10px] font-medium" style={{ color: C.equityGold }}>
+          {playbackMonth > 0 ? `M${playbackMonth}` : `M${months}`} · ¥{fmtMoney(totalAsset)}
+        </span>
+      </div>
+
+      {/* 储蓄罐容器 */}
+      <div className="relative w-full h-10 rounded-lg overflow-hidden" style={{ background: 'rgba(11, 20, 36, 0.5)', border: '1px solid rgba(126, 190, 255, 0.06)' }}>
+        {/* 刻度线 */}
+        {milestones.map((m) => (
+          <div key={m} className="absolute top-0 bottom-0 w-px" style={{ left: `${(m / months) * 100}%`, background: 'rgba(126, 190, 255, 0.08)' }}>
+            <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-[7px]" style={{ color: C.textMuted }}>M{m}</span>
+          </div>
+        ))}
+
+        {/* 液体填充 */}
+        <motion.div
+          className="absolute bottom-0 left-0 top-0 rounded-lg"
+          initial={{ width: '0%' }}
+          animate={{ width: `${fillPercent}%` }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
+          style={{
+            background: 'linear-gradient(90deg, rgba(124,92,255,0.35) 0%, rgba(246,201,107,0.25) 60%, rgba(246,201,107,0.35) 100%)',
+          }}
+        >
+          {/* 液体波纹 */}
+          <div className="absolute right-0 top-0 bottom-0 w-2" style={{ background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.06))' }} />
+          {/* 顶部光带 */}
+          <div className="absolute right-0 top-0 h-full w-0.5 rounded-full" style={{ background: 'rgba(246,201,107,0.4)', boxShadow: '0 0 6px rgba(246,201,107,0.3)' }} />
+        </motion.div>
+
+        {/* 气泡动画 */}
+        {fillPercent > 5 && (
+          <div className="absolute bottom-1 left-[10%] w-0.5 h-0.5 rounded-full animate-bounce" style={{ background: 'rgba(246,201,107,0.3)', animationDuration: '2s' }} />
+        )}
+        {fillPercent > 30 && (
+          <div className="absolute bottom-2 left-[35%] w-0.5 h-0.5 rounded-full animate-bounce" style={{ background: 'rgba(246,201,107,0.2)', animationDuration: '2.5s', animationDelay: '0.3s' }} />
+        )}
+        {fillPercent > 60 && (
+          <div className="absolute bottom-1.5 left-[65%] w-0.5 h-0.5 rounded-full animate-bounce" style={{ background: 'rgba(246,201,107,0.25)', animationDuration: '1.8s', animationDelay: '0.6s' }} />
+        )}
+
+        {/* 空罐标识 */}
+        {fillPercent < 5 && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-[8px]" style={{ color: 'rgba(111,127,159,0.2)' }}>等待推演...</span>
+          </div>
+        )}
+      </div>
+
+      {/* 底部小标签 */}
+      <div className="flex justify-between mt-1">
+        <span className="text-[8px]" style={{ color: C.textMuted }}>0</span>
+        <span className="text-[8px]" style={{ color: fillPercent >= 100 ? C.equityGold : C.textMuted }}>
+          {fillPercent >= 100 ? '权益舱已满' : `积累中 ${Math.round(fillPercent)}%`}
+        </span>
+        <span className="text-[8px]" style={{ color: C.textMuted }}>M{months}</span>
+      </div>
+    </div>
+  )
+}
+
+// ════════════════════════════════════════════════════════════
+// 7. 右侧收益总控台
+// ════════════════════════════════════════════════════════════
+
+function RevenueDashboard({
+  result,
+  scenario,
+  playingStep,
+  playbackMonth,
+}: {
+  result: GrowthResult
+  scenario: PartnerGrowthScenario
+  playingStep: number
+  playbackMonth: number
+}) {
+  const [expanded, setExpanded] = useState<string | null>(null)
   const months = scenario.projectionMonths
   const multiplier = IDENTITY_MULTIPLIERS[scenario.identity] ?? 1
-  const rv = playingStep >= 7 || playingStep === 0
+  const resultVisible = playingStep >= 7 || playingStep === 0
+
+  // 滚动动画触发
+  const animTrigger = playingStep >= 7
+
+  const basicTotal = result.productGiftValue + result.dataAssetReward + result.tradableAsset + result.dailyReleaseMax
+  const growthTotal = result.referralReward + result.teamSubsidy + result.tierBonus
+  const shareTotal = result.globalSalesShare + result.computeIncomeShare + result.regionalSalesShare
+  const totalAsset = months === 36 ? result.totalAsset36M : result.totalAsset12M
+  const roi = months === 36 ? result.roi36M : result.roi12M
+
+  const animatedBasic = useAnimatedNumber(basicTotal, 600, animTrigger)
+  const animatedGrowth = useAnimatedNumber(growthTotal, 700, animTrigger)
+  const animatedShare = useAnimatedNumber(shareTotal, 800, animTrigger)
 
   const cards = [
-    { key: 'basic', title: '基础权益', color: C.dataBlue, total: result.productGiftValue + result.dataAssetReward + result.tradableAsset + result.dailyReleaseMax, items: [
-      { label: '产品礼包', value: result.productGiftValue, desc: `投入×30%×${multiplier}` },
-      { label: '数据资产奖励', value: result.dataAssetReward, desc: `投入×50%×${multiplier}` },
-      { label: '可流通资产', value: result.tradableAsset, desc: '数据资产×40%' },
-      { label: '每日释放', value: result.dailyReleaseMax, desc: '数据资产×0.8%' },
-    ]},
-    { key: 'growth', title: '增长权益', color: C.poolPurple, total: result.referralReward + result.teamSubsidy + result.tierBonus, items: [
-      { label: '推荐奖励', value: result.referralReward, desc: `团队投入×5%×${multiplier}` },
-      { label: '团队补贴', value: result.teamSubsidy, desc: `团队投入×3%×${multiplier}` },
-      { label: '阶梯业绩奖励', value: result.tierBonus, desc: `团队投入×2%×${months}/12` },
-    ]},
-    { key: 'share', title: '分成权益', color: C.equityGold, total: result.globalSalesShare + result.computeIncomeShare + result.regionalSalesShare, items: [
-      { label: '全网销售额分成', value: result.globalSalesShare, desc: '权益份额×20%' },
-      { label: '算力收益分成', value: result.computeIncomeShare, desc: '权益份额×15%' },
-      { label: '区域销售额分成', value: result.regionalSalesShare, desc: '权益份额×25%' },
-    ]},
+    {
+      key: 'basic', title: '基础权益', color: C.dataBlue,
+      value: animatedBasic,
+      items: [
+        { label: '产品礼包', value: result.productGiftValue, desc: `投入×30%×${multiplier}` },
+        { label: '数据资产奖励', value: result.dataAssetReward, desc: `投入×50%×${multiplier}` },
+        { label: '可流通资产', value: result.tradableAsset, desc: '数据资产×40%' },
+        { label: '每日释放', value: result.dailyReleaseMax, desc: '数据资产×0.8%' },
+      ],
+    },
+    {
+      key: 'growth', title: '增长权益', color: C.poolPurple,
+      value: animatedGrowth,
+      items: [
+        { label: '推荐奖励', value: result.referralReward, desc: `团队投入×5%×${multiplier}` },
+        { label: '团队补贴', value: result.teamSubsidy, desc: `团队投入×3%×${multiplier}` },
+        { label: '阶梯业绩奖励', value: result.tierBonus, desc: `团队投入×2%×${months}/12` },
+      ],
+    },
+    {
+      key: 'share', title: '分成权益', color: C.equityGold,
+      value: animatedShare,
+      items: [
+        { label: '全网销售额分成', value: result.globalSalesShare, desc: '权益份额×20%' },
+        { label: '算力收益分成', value: result.computeIncomeShare, desc: '权益份额×15%' },
+        { label: '区域销售额分成', value: result.regionalSalesShare, desc: '权益份额×25%' },
+      ],
+    },
   ]
 
   return (
     <div className="flex flex-col gap-1.5 h-full">
-      {/* 大卡 */}
-      <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: rv ? 1 : 0.3, y: rv ? 0 : -3 }} transition={{ duration: 0.4 }}
-        className="rounded-xl p-2.5 relative overflow-hidden flex-shrink-0"
-        style={{ background: 'linear-gradient(135deg, rgba(246,201,107,0.07), rgba(124,92,255,0.04))', border: '1px solid rgba(246, 201, 107, 0.12)' }}>
-        <div className="absolute -top-6 -right-6 w-20 h-20 rounded-full" style={{ background: 'radial-gradient(circle, rgba(246,201,107,0.04), transparent)' }} />
-        <div className="text-[9px] tracking-widest uppercase mb-0.5" style={{ color: C.textMuted }}>{months}个月累计总权益</div>
-        <div className="text-lg font-bold tracking-tight" style={{ color: C.equityGold }}>¥{fmtMoney(totalAsset)}</div>
-        <div className="flex items-center gap-3 mt-1.5">
-          <div><span className="text-[9px]" style={{ color: C.textMuted }}>投资回报率</span><div className="text-xs font-bold" style={{ color: C.flowCyan }}>{fmtRoi(roi)}</div></div>
-          <div className="w-px h-4" style={{ background: 'rgba(126,190,255,0.06)' }} />
-          <div><span className="text-[9px]" style={{ color: C.textMuted }}>期末月度分成</span><div className="text-xs font-bold" style={{ color: C.dataBlue }}>¥{fmtMoney(result.monthlyTrack[result.monthlyTrack.length - 1]?.equityShare ?? 0)}</div></div>
+      {/* 克制的结果汇总行（代替夸张大卡） */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: resultVisible ? 1 : 0.5 }} transition={{ duration: 0.4 }}
+        className="rounded-lg px-2.5 py-1.5 flex items-center justify-between flex-shrink-0"
+        style={{ background: 'rgba(246,201,107,0.04)', border: '1px solid rgba(246, 201, 107, 0.1)' }}>
+        <div className="flex items-center gap-3">
+          <span className="text-[9px]" style={{ color: C.textMuted }}>{months}个月累计</span>
+          <span className="text-xs font-bold" style={{ color: C.equityGold }}>¥{fmtMoney(totalAsset)}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-[9px]" style={{ color: C.textMuted }}>ROI</span>
+          <span className="text-[10px] font-bold" style={{ color: C.flowCyan }}>{fmtRoi(roi)}</span>
         </div>
       </motion.div>
 
-      {/* 三张卡 */}
+      {/* 三张主权益卡 */}
       {cards.map((card, ci) => (
         <motion.div key={card.key} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: ci * 0.06, duration: 0.3 }}
           className="rounded-xl overflow-hidden flex-shrink-0" style={{ background: C.panelBg, border: `1px solid ${C.panelBorder}` }}>
@@ -350,7 +578,7 @@ function RevenueDashboard({ result, scenario, playingStep }: { result: GrowthRes
               <span className="text-[11px] font-medium" style={{ color: C.textSub }}>{card.title}</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-xs font-bold tabular-nums" style={{ color: card.color }}>¥{fmtMoney(card.total)}</span>
+              <span className="text-xs font-bold tabular-nums" style={{ color: card.color }}>¥{fmtMoney(card.value)}</span>
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="2" strokeLinecap="round" className="transition-transform flex-shrink-0" style={{ transform: expanded === card.key ? 'rotate(180deg)' : 'rotate(0deg)' }}>
                 <polyline points="6 9 12 15 18 9" />
               </svg>
@@ -372,12 +600,17 @@ function RevenueDashboard({ result, scenario, playingStep }: { result: GrowthRes
           </AnimatePresence>
         </motion.div>
       ))}
+
+      {/* 权益积累舱 */}
+      <div className="flex-shrink-0">
+        <EquityAccumulationTank result={result} scenario={scenario} playbackMonth={playbackMonth} playingStep={playingStep} />
+      </div>
     </div>
   )
 }
 
 // ════════════════════════════════════════════════════════════
-// 6. 底部增长轨道（紧凑关键节点）
+// 8. 底部增长轨道
 // ════════════════════════════════════════════════════════════
 
 function BattleTrack({ track, months, playingStep, playbackMonth }: { track: MonthlyData[]; months: number; playingStep: number; playbackMonth: number }) {
@@ -403,12 +636,11 @@ function BattleTrack({ track, months, playingStep, playbackMonth }: { track: Mon
     <div className="w-full overflow-x-auto scrollbar-thin">
       <svg viewBox={`0 0 ${w} ${h + 50}`} className="w-full" style={{ minWidth: '600px' }}>
         <defs>
-          <linearGradient id="btGrad3" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor={C.dataBlue} stopOpacity="0.35" /><stop offset="100%" stopColor={C.poolPurple} stopOpacity="0.35" /></linearGradient>
-          <linearGradient id="btArea3" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="rgba(74, 184, 255, 0.05)" /><stop offset="100%" stopColor="transparent" /></linearGradient>
+          <linearGradient id="btGrad4" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor={C.dataBlue} stopOpacity="0.35" /><stop offset="100%" stopColor={C.poolPurple} stopOpacity="0.35" /></linearGradient>
         </defs>
         <polyline points={points} fill="none" stroke="rgba(74, 184, 255, 0.04)" strokeWidth="1" strokeLinecap="round" />
         {activeMonths > 1 && (
-          <polyline points={data.slice(0, activeMonths).map((d, i) => `${getX(i)},${getY(d.equityShare)}`).join(' ')} fill="none" stroke="url(#btGrad3)" strokeWidth="1.5" strokeLinecap="round" />
+          <polyline points={data.slice(0, activeMonths).map((d, i) => `${getX(i)},${getY(d.equityShare)}`).join(' ')} fill="none" stroke="url(#btGrad4)" strokeWidth="1.5" strokeLinecap="round" />
         )}
         {keyIndices.map((idx) => {
           const d = data[idx]; if (!d) return null
@@ -435,7 +667,7 @@ function BattleTrack({ track, months, playingStep, playbackMonth }: { track: Mon
 }
 
 // ════════════════════════════════════════════════════════════
-// 7. 数据光流连接
+// 9. 数据光流连接
 // ════════════════════════════════════════════════════════════
 
 function DataFlowRays({ playingStep }: { playingStep: number }) {
@@ -456,7 +688,7 @@ function DataFlowRays({ playingStep }: { playingStep: number }) {
 }
 
 // ════════════════════════════════════════════════════════════
-// 8. 顶部推演假设
+// 10. 顶部推演假设
 // ════════════════════════════════════════════════════════════
 
 function AssumptionBadge({ scenario }: { scenario: PartnerGrowthScenario }) {
@@ -483,7 +715,7 @@ function AssumptionBadge({ scenario }: { scenario: PartnerGrowthScenario }) {
 }
 
 // ════════════════════════════════════════════════════════════
-// 主组件 — ResizeObserver 自适应
+// 主组件
 // ════════════════════════════════════════════════════════════
 
 export default function PartnerGrowthSandbox() {
@@ -495,7 +727,6 @@ export default function PartnerGrowthSandbox() {
   const [playbackMonth, setPlaybackMonth] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
 
-  // ResizeObserver 获取容器真实尺寸
   const containerRef = useRef<HTMLDivElement>(null)
   const [size, setSize] = useState({ width: 0, height: 0 })
 
@@ -510,8 +741,38 @@ export default function PartnerGrowthSandbox() {
     return () => ro.disconnect()
   }, [])
 
-  // 根据容器高度判断紧凑模式
   const compact = size.height > 0 && size.height < 720
+
+  // 键盘快捷键
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      switch (e.key) {
+        case ' ':
+          e.preventDefault()
+          handlePlay()
+          break
+        case 'ArrowUp': {
+          e.preventDefault()
+          const idx = IDENTITY_ORDER.indexOf(scenario.identity)
+          if (idx > 0) handleIdentityClick(IDENTITY_ORDER[idx - 1])
+          break
+        }
+        case 'ArrowDown': {
+          e.preventDefault()
+          const idx = IDENTITY_ORDER.indexOf(scenario.identity)
+          if (idx < IDENTITY_ORDER.length - 1) handleIdentityClick(IDENTITY_ORDER[idx + 1])
+          break
+        }
+        case 'r':
+        case 'R':
+          setShowRoadshowDeck(true)
+          break
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [scenario.identity, isPlaying])
 
   const handlePlay = useCallback(() => {
     if (isPlaying) return
@@ -545,7 +806,7 @@ export default function PartnerGrowthSandbox() {
 
   return (
     <div ref={containerRef} className="relative w-full h-full flex flex-col overflow-hidden">
-      {/* 标题栏 — 自然高度 */}
+      {/* 标题栏 */}
       <div className="flex items-center justify-between px-4 py-2 flex-shrink-0">
         <div className="flex items-center gap-2">
           <div className="w-0.5 h-3.5 rounded-full" style={{ background: 'linear-gradient(to bottom, #4AB8FF, #7C5CFF)' }} />
@@ -569,7 +830,12 @@ export default function PartnerGrowthSandbox() {
         </div>
       </div>
 
-      {/* 推演假设 — 单行 */}
+      {/* 阶段指示器 */}
+      <div className="flex-shrink-0 pb-1">
+        <PlaybackStageIndicator step={playingStep} isPlaying={isPlaying} />
+      </div>
+
+      {/* 推演假设 */}
       <div className="px-4 pb-1.5 flex-shrink-0">
         <div className="flex items-center gap-2">
           <span className="text-[8px] tracking-widest uppercase flex-shrink-0" style={{ color: C.textMuted }}>当前推演假设</span>
@@ -580,7 +846,7 @@ export default function PartnerGrowthSandbox() {
         </div>
       </div>
 
-      {/* 主内容区 — flex 自适应 */}
+      {/* 主内容区 */}
       <div className="flex-1 grid grid-cols-12 gap-2 min-h-0 px-4 py-1">
         {/* 左侧 */}
         <div className="col-span-2 h-full min-h-0">
@@ -625,11 +891,11 @@ export default function PartnerGrowthSandbox() {
         {/* 右侧 */}
         <motion.div key={scenario.identity} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4 }}
           className="col-span-4 h-full min-h-0 rounded-xl p-2 overflow-hidden" style={{ background: C.panelBg, border: `1px solid ${C.panelBorder}` }}>
-          <RevenueDashboard result={result} scenario={scenario} playingStep={playingStep} />
+          <RevenueDashboard result={result} scenario={scenario} playingStep={playingStep} playbackMonth={playbackMonth} />
         </motion.div>
       </div>
 
-      {/* 底部轨道 — 自然高度 */}
+      {/* 底部轨道 */}
       <div className="flex-shrink-0 mx-4 mb-2 rounded-xl p-2" style={{ background: C.panelBg, border: `1px solid ${C.panelBorder}` }}>
         <div className="flex items-center justify-between mb-0.5">
           <div className="flex items-center gap-1.5">
